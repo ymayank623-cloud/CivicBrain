@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* SMART DARK MODE INVERT TRICK FOR HACKATHON */
+html[data-theme="dark"] body {
+  background-color: #111;
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Double-invert images, maps, and specific colored elements to keep them normal */
+html[data-theme="dark"] img,
+html[data-theme="dark"] video,
+html[data-theme="dark"] .leaflet-container,
+html[data-theme="dark"] [style*="background-image"] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Fix shadow issues caused by invert */
+html[data-theme="dark"] .shadow-sm,
+html[data-theme="dark"] .shadow-md,
+html[data-theme="dark"] .shadow-lg,
+html[data-theme="dark"] .shadow-xl {
+  box-shadow: none !important;
+  border: 1px solid #e5e7eb;
+}
