@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Phone, Mail } from "lucide-react";
+﻿import { ChevronDown, ChevronUp, Phone, Mail } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -15,7 +15,7 @@ const faqs = [
   {
     category: "Ticket Tracking",
     items: [
-      { q: "Apni complaint ka status kaise dekhein?", a: "'Track Grievance' page par jaiye aur apna Ticket ID enter karein (e.g., CB-8842). Live status dikhega — Assigned, In Progress, ya Resolved." },
+      { q: "Apni complaint ka status kaise dekhein?", a: "'Track Grievance' page par jaiye aur apna Ticket ID enter karein (e.g., CB-8842). Live status dikhega  Assigned, In Progress, ya Resolved." },
       { q: "Ticket ID kahaan milega?", a: "Complaint submit hone par screen par show hoga aur registered mobile/email par SMS/email aayega." },
       { q: "Complaint ka koi response nahi aa raha toh kya karein?", a: "Agar SLA time guzar gaya aur koi response nahi, toh system automatically senior officer ko escalate kar deta hai. Aap 'Report False Update' button bhi use kar sakte hain." },
     ]
@@ -51,7 +51,7 @@ export default function HelpFaq() {
       <div className="bg-blue-900 text-white py-8 px-6 border-b-4 border-orange-500">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-2xl sm:text-3xl font-bold mb-1">Help & Frequently Asked Questions</h1>
-          <p className="text-blue-200 text-sm">सहायता केंद्र — Citizen Support Center</p>
+          <p className="text-blue-200 text-sm"> •‡‚  Citizen Support Center</p>
         </div>
       </div>
 
@@ -94,14 +94,14 @@ export default function HelpFaq() {
         <div className="w-full lg:w-72 flex-shrink-0 space-y-4">
           {/* Contact Card */}
           <div className="bg-blue-900 text-white rounded shadow-md p-5 border-t-4 border-orange-500">
-            <h3 className="font-bold text-base mb-4">📞 Contact Support</h3>
+            <h3 className="font-bold text-base mb-4"> Contact Support</h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center gap-3">
                 <Phone size={16} className="text-orange-400 flex-shrink-0" />
                 <div>
                   <p className="font-bold">Helpline</p>
                   <p className="text-blue-200">1800-CIVIC (Free)</p>
-                  <p className="text-blue-300 text-xs">Mon–Sat, 9 AM – 6 PM</p>
+                  <p className="text-blue-300 text-xs">MonSat, 9 AM  6 PM</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -120,11 +120,11 @@ export default function HelpFaq() {
             <h3 className="font-bold text-sm text-blue-900 mb-3 uppercase tracking-wide border-b border-gray-200 pb-2">Quick Links</h3>
             <div className="space-y-2">
               {[
-                { label: "📝 File a New Complaint", to: "/citizen/new-complaint" },
-                { label: "🔍 Track Complaint Status", to: "/track" },
-                { label: "🔐 Login to Portal", to: "/login" },
-                { label: "📋 Register as Citizen", to: "/register" },
-                { label: "🏠 Back to Home", to: "/" },
+                { label: " File a New Complaint", to: "/citizen/new-complaint" },
+                { label: " Track Complaint Status", to: "/track" },
+                { label: " Login to Portal", to: "/login" },
+                { label: " Register as Citizen", to: "/register" },
+                { label: " Back to Home", to: "/" },
               ].map(link => (
                 <Link key={link.to} to={link.to} className="block text-sm text-blue-800 hover:text-orange-600 hover:bg-orange-50 px-2 py-1.5 rounded transition-colors font-medium">
                   {link.label}
@@ -135,7 +135,7 @@ export default function HelpFaq() {
 
           {/* Notice */}
           <div className="bg-yellow-50 border border-yellow-300 rounded p-4 text-xs text-yellow-900">
-            <strong>📢 Important Notice:</strong><br />
+            <strong> Important Notice:</strong><br />
             Ye portal sirf nagar palika limits ke andar ki shikayaton ke liye hai. Aapda prabandhan ke liye 112 ya NDRF se sampark karein.
           </div>
         </div>
@@ -145,8 +145,8 @@ export default function HelpFaq() {
       <footer className="bg-blue-900 text-white mt-10 py-6 px-6 border-t-4 border-orange-500">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
           <div className="text-blue-200">
-            <p className="font-bold text-white mb-1">नगर निगम | Municipal Corporation — CivicBrain</p>
-            <p>© 2026 A Digital India Initiative. All Rights Reserved.</p>
+            <p className="font-bold text-white mb-1">— — | Municipal Corporation  CivicBrain</p>
+            <p> 2026 A Digital India Initiative. All Rights Reserved.</p>
           </div>
           <div className="flex gap-5 text-blue-300 font-semibold">
             <a href="#" className="hover:text-white">Privacy Policy</a>

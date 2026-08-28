@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+﻿import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -12,6 +12,7 @@ import NewComplaint from "./pages/NewComplaint";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicLayout from "./components/PublicLayout";
 import Profile from "./pages/Profile";
+import ForgotPassword from "./pages/ForgotPassword";
 
 import { LangProvider } from "./context/LangContext";
 
@@ -20,12 +21,13 @@ function App() {
     <LangProvider>
       <BrowserRouter>
         <Routes>
-          {/* All routes wrapped inside PublicLayout — GovNavbar appears on every page */}
+          {/* All routes wrapped inside PublicLayout - GovNavbar appears on every page */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/track" element={<Track />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/help-faq" element={<HelpFaq />} />
             <Route path="/profile" element={<Profile />} />
             {/* Protected Dashboard Routes */}

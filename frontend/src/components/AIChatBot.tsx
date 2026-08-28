@@ -6,7 +6,7 @@ export default function AIChatBot() {
   const [messages, setMessages] = useState<{role: "user" | "ai", text: string, time: string}[]>([
     {
       role: "ai",
-      text: "Namaste! 🙏 I am CivicBrain AI, your virtual assistant for Nagar Nigam. You can ask me how to file a complaint, check ticket status, or report an issue directly here. How can I help you today?",
+      text: "Namaste!  I am CivicBrain AI, your virtual assistant for Nagar Nigam. You can ask me how to file a complaint, check ticket status, or report an issue directly here. How can I help you today?",
       time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
     }
   ]);
@@ -44,7 +44,7 @@ export default function AIChatBot() {
       } else if (lowerInput.includes("track") || lowerInput.includes("status")) {
         aiResponse = "You can track your existing complaint by clicking on 'Track Grievance' in the top menu. You just need your Ticket ID (e.g., CB-8842).";
       } else if (lowerInput.includes("hindi") || lowerInput.includes("namaste")) {
-        aiResponse = "नमस्ते! मैं नगर निगम का AI असिस्टेंट हूँ। आप यहाँ शिकायत दर्ज करने या स्टेटस चेक करने की जानकारी ले सकते हैं।";
+        aiResponse = "‡! ‚ — — • AI …‡‚ ‚ †  •  •‡  ‡ ‡• •‡ •€ •€ ‡ •‡ ‚";
       } else {
         aiResponse = "Thank you for reaching out. For complex issues, I recommend logging into your Citizen Portal and raising an official ticket so our department heads can track it via the Escalation Matrix.";
       }
@@ -72,10 +72,10 @@ export default function AIChatBot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-8 right-8 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col z-50 overflow-hidden" style={{ height: '500px', maxHeight: '80vh' }}>
+        <div className="fixed bottom-3 right-3 left-3 sm:left-auto sm:right-6 sm:bottom-6 sm:w-96 max-w-[calc(100vw-1.5rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col z-50 overflow-hidden h-[480px] max-h-[82vh]">
           
           {/* Header */}
-          <div className="bg-blue-900 text-white px-4 py-3 flex justify-between items-center">
+          <div className="bg-blue-900 text-white px-4 py-3 flex justify-between items-center flex-shrink-0">
             <div className="flex items-center gap-2">
               <div className="bg-white rounded-full p-1.5 flex items-center justify-center">
                 <Bot size={20} className="text-blue-900" />
@@ -87,25 +87,25 @@ export default function AIChatBot() {
                 </p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-blue-200 hover:text-white transition-colors">
+            <button onClick={() => setIsOpen(false)} className="text-blue-200 hover:text-white transition-colors p-1">
               <X size={20} />
             </button>
           </div>
 
           {/* Chat History */}
-          <div className="flex-1 overflow-y-auto p-4 bg-gray-50 flex flex-col gap-4">
-            <div className="text-center text-[10px] text-gray-400 font-semibold mb-2">
+          <div className="flex-1 overflow-y-auto p-3.5 bg-gray-50 flex flex-col gap-3">
+            <div className="text-center text-[10px] text-gray-400 font-semibold mb-1">
               Powered by Nagar Nigam AI
             </div>
 
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm shadow-sm relative ${
+                <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm shadow-sm relative ${
                   msg.role === 'user' 
                     ? 'bg-blue-900 text-white rounded-tr-sm' 
                     : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm'
                 }`}>
-                  <p>{msg.text}</p>
+                  <p className="text-xs sm:text-sm leading-relaxed">{msg.text}</p>
                   <span className={`text-[9px] mt-1 block text-right ${msg.role === 'user' ? 'text-blue-200' : 'text-gray-400'}`}>
                     {msg.time}
                   </span>
@@ -115,7 +115,7 @@ export default function AIChatBot() {
 
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm flex gap-1">
+                <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-2.5 shadow-sm flex gap-1">
                   <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
                   <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
@@ -127,35 +127,36 @@ export default function AIChatBot() {
 
           {/* Quick Actions (Chips) */}
           {messages.length === 1 && (
-            <div className="px-3 py-2 bg-gray-50 flex gap-2 overflow-x-auto no-scrollbar border-t border-gray-100">
-              <button onClick={() => setInput("Report pothole")} className="flex-shrink-0 bg-white border border-gray-200 text-xs text-blue-800 px-3 py-1.5 rounded-full hover:bg-blue-50 whitespace-nowrap">🛣️ Report pothole</button>
-              <button onClick={() => setInput("Track my ticket")} className="flex-shrink-0 bg-white border border-gray-200 text-xs text-blue-800 px-3 py-1.5 rounded-full hover:bg-blue-50 whitespace-nowrap">🔍 Track my ticket</button>
+            <div className="px-3 py-2 bg-gray-50 flex gap-2 overflow-x-auto no-scrollbar border-t border-gray-100 flex-shrink-0">
+              <button onClick={() => setInput("Report pothole")} className="flex-shrink-0 bg-white border border-gray-200 text-xs text-blue-800 px-3 py-1 rounded-full hover:bg-blue-50 whitespace-nowrap shadow-sm">Report pothole</button>
+              <button onClick={() => setInput("Track my ticket")} className="flex-shrink-0 bg-white border border-gray-200 text-xs text-blue-800 px-3 py-1 rounded-full hover:bg-blue-50 whitespace-nowrap shadow-sm">Track my ticket</button>
             </div>
           )}
 
           {/* Input Area */}
-          <div className="p-3 bg-white border-t border-gray-200">
-            <div className="flex items-center gap-2">
-              <button className="text-gray-400 hover:text-blue-900 transition-colors" title="Attach Photo">
-                <ImageIcon size={20} />
+          <div className="p-2.5 bg-white border-t border-gray-200 flex-shrink-0">
+            <div className="flex items-center gap-1.5">
+              <button className="text-gray-400 hover:text-blue-900 p-1 flex-shrink-0 transition-colors" title="Attach Photo">
+                <ImageIcon size={18} />
               </button>
-              <button className="text-gray-400 hover:text-orange-600 transition-colors" title="Share Location">
-                <MapPin size={20} />
+              <button className="text-gray-400 hover:text-orange-600 p-1 flex-shrink-0 transition-colors" title="Share Location">
+                <MapPin size={18} />
               </button>
               <input 
                 type="text" 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Type your message..."
-                className="flex-1 bg-gray-100 border-transparent focus:bg-white focus:border-blue-900 focus:ring-0 rounded-full px-4 py-2 text-sm"
+                placeholder="Type message..."
+                className="flex-1 min-w-0 bg-gray-100 border border-transparent focus:bg-white focus:border-blue-900 rounded-full px-3.5 py-2 text-xs sm:text-sm outline-none"
               />
               <button 
                 onClick={handleSend}
                 disabled={!input.trim()}
-                className="bg-blue-900 disabled:bg-gray-300 text-white p-2 rounded-full hover:bg-blue-800 transition-colors flex-shrink-0"
+                className="bg-blue-900 disabled:bg-gray-300 text-white w-9 h-9 rounded-full hover:bg-blue-800 transition-colors flex items-center justify-center flex-shrink-0 shadow-sm"
+                title="Send"
               >
-                <Send size={16} className="ml-0.5" />
+                <Send size={15} />
               </button>
             </div>
           </div>

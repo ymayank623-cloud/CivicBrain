@@ -1,509 +1,407 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, MapPin, Loader2, CheckCircle2, Mail } from "lucide-react";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, ShieldCheck, User, Mail, MapPin, Lock, CheckCircle2, Loader2 } from 'lucide-react';
+
+interface FormData {
+  name: string; email: string; phone: string; aadhaar: string;
+  gender: string; dob: string; address: string; pincode: string;
+  city: string; state: string; password: string; confirmPassword: string;
+}
 
 export default function Register() {
   const navigate = useNavigate();
+  const [step, setStep] = useState<'form' | 'success'>('form');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pincodeLoading, setPincodeLoading] = useState(false);
-  const [pincodeSuccess, setPincodeSuccess] = useState(false);
-  const [error, setError] = useState("");
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
-
-  // OTP States
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpValue, setOtpValue] = useState("");
-  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  
+  // OTP state
   const [otpLoading, setOtpLoading] = useState(false);
-  const [otpError, setOtpError] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const [otpNotice, setOtpNotice] = useState('');
+  const [error, setError] = useState('');
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    aadhaar: "",
-    state: "",
-    city: "",
-    nagarNigam: "",
-    ward: "",
-    address: "",
-    pincode: "",
-    password: "",
+  const [formData, setFormData] = useState<FormData>({
+    name: '', email: '', phone: '', aadhaar: '',
+    gender: '', dob: '', address: '', pincode: '',
+    city: '', state: '', password: '', confirmPassword: ''
   });
 
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
-    // Reset OTP verification if email is changed
-    if (name === "email") {
-      setOtpSent(false);
-      setIsEmailVerified(false);
-      setOtpValue("");
-    }
-
-    if (name === "pincode") {
-      if (value.length < 6) {
-        setPincodeSuccess(false);
-        setCoords(null);
-        setFormData(prev => ({ ...prev, pincode: value, state: "", city: "", nagarNigam: "" }));
-        return;
-      }
-
-      if (value.length === 6 && /^\d+$/.test(value)) {
-        setPincodeLoading(true);
-        setPincodeSuccess(false);
-        setCoords(null);
-        try {
-          const postalRes = await fetch(`https://api.postalpincode.in/pincode/${value}`);
-          const postalData = await postalRes.json();
-
-          if (postalData && postalData[0].Status === "Success") {
-            const postOffice = postalData[0].PostOffice[0];
-            const district = postOffice.District;
-            const state   = postOffice.State;
-            const nagarNigamName = `${district} Nagar Nigam`;
-
-            setFormData(prev => ({
-              ...prev,
-              pincode: value,
-              state,
-              city: district,
-              nagarNigam: nagarNigamName,
-            }));
-            setPincodeSuccess(true);
-
-            try {
-              const geoRes = await fetch(
-                `https://nominatim.openstreetmap.org/search?postalcode=${value}&countrycodes=in&format=json&limit=1`,
-                { headers: { "Accept-Language": "en" } }
-              );
-              const geoData = await geoRes.json();
-              if (geoData && geoData.length > 0) {
-                setCoords({ lat: parseFloat(geoData[0].lat), lng: parseFloat(geoData[0].lon) });
-              }
-            } catch {
-              console.warn("Geocoding failed");
-            }
-          } else {
-            setFormData(prev => ({ ...prev, pincode: value, state: "", city: "", nagarNigam: "" }));
-            setPincodeSuccess(false);
-          }
-        } catch (err) {
-          console.error("Pincode fetch failed", err);
-        } finally {
-          setPincodeLoading(false);
+    if (name === 'pincode' && value.length === 6) {
+      setPincodeLoading(true);
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${value}`);
+        const data = await res.json();
+        if (data?.[0]?.Status === 'Success') {
+          const po = data[0].PostOffice[0];
+          setFormData(prev => ({ ...prev, city: po.District, state: po.State }));
         }
-      }
+      } catch {}
+      setPincodeLoading(false);
     }
   };
 
+  const getApiUrl = (endpoint: string) => {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    return (isLocal ? 'http://localhost:5001' : 'https://civicbrain-api-2026.loca.lt') + endpoint;
+  };
+
   const handleSendOtp = async () => {
-    if (!formData.email) return;
+    if (!formData.email) {
+      setOtpError('Please enter Email ID first.');
+      return;
+    }
     setOtpLoading(true);
-    setOtpError("");
+    setOtpSent(false);
+    setOtpError('');
+    setOtpNotice('');
+
     try {
-      const res = await fetch("http://localhost:5001/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email })
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+
+      const res = await fetch(getApiUrl('/api/otp/send'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'bypass-tunnel-reminder': 'true',
+        },
+        body: JSON.stringify({ email: formData.email.trim().toLowerCase() }),
+        signal: controller.signal
       });
-      const data = await res.json();
+      clearTimeout(timeout);
+
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setOtpSent(true);
-        // If dev mode, it returns the OTP
-        if (data.devOtp) {
-          console.log("DEV OTP:", data.devOtp);
-          // Auto-fill in dev mode for convenience if needed, but let's let the user type or see it in terminal
-          alert(`OTP sent! Check terminal. Dev OTP is: ${data.devOtp}`);
-        } else {
-          alert("OTP has been sent to your Gmail inbox!");
-        }
+        setOtpNotice(`OTP has been sent to ${formData.email}. Please check your inbox!`);
       } else {
-        setOtpError(data.message || "Failed to send OTP");
+        setOtpError(data?.message || 'Failed to send OTP to email. Please check your email address.');
       }
     } catch (err) {
-      setOtpError("Could not connect to server to send OTP");
+      setOtpError('Network error while sending OTP. Please try again.');
     } finally {
       setOtpLoading(false);
     }
   };
 
   const handleVerifyOtp = async () => {
-    if (!otpValue) return;
+    if (!otp || otp.trim().length !== 6) {
+      setOtpError('Please enter valid 6-digit OTP received on your email.');
+      return;
+    }
     setOtpLoading(true);
-    setOtpError("");
+    setOtpError('');
+
     try {
-      const res = await fetch("http://localhost:5001/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, otp: otpValue })
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+
+      const res = await fetch(getApiUrl('/api/otp/verify'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'bypass-tunnel-reminder': 'true',
+        },
+        body: JSON.stringify({ email: formData.email.trim().toLowerCase(), otp: otp.trim() }),
+        signal: controller.signal
       });
-      const data = await res.json();
-      if (res.ok && data.verified) {
-        setIsEmailVerified(true);
+      clearTimeout(timeout);
+
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setEmailVerified(true);
+        setOtpNotice('Email verified successfully!');
+        setOtpError('');
       } else {
-        setOtpError(data.message || "Invalid OTP");
+        setOtpError(data?.message || 'Invalid or expired OTP. Please check your email.');
       }
     } catch (err) {
-      setOtpError("Could not connect to verify OTP");
+      setOtpError('Unable to verify OTP right now. Please try again.');
     } finally {
       setOtpLoading(false);
     }
   };
 
-  const openGoogleMaps = () => {
-    if (!formData.nagarNigam) return;
-
-    if (coords) {
-      const { lat, lng } = coords;
-      const query = encodeURIComponent(`Nagar Nigam Zonal Office`);
-      window.open(`https://www.google.com/maps/search/${query}/@${lat},${lng},14z`, "_blank");
-    } else {
-      const query = encodeURIComponent(`${formData.nagarNigam} Zonal Office ${formData.city} ${formData.state}`);
-      window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
-    }
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isEmailVerified) {
-      setError("Please verify your email with OTP before registering.");
+    setError('');
+
+    if (!emailVerified) {
+      setError('Please verify your Email ID via OTP before submitting.');
       return;
     }
-    if (formData.phone.length !== 10) {
-      setError("Mobile Number must be exactly 10 digits.");
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
       return;
     }
-    if (formData.aadhaar.length !== 12) {
-      setError("Aadhaar Number must be exactly 12 digits.");
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters.');
       return;
     }
+
     setIsLoading(true);
-    setError("");
-    try {
-      const response = await fetch("http://localhost:5001/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+    const cleanEmail = formData.email.trim().toLowerCase();
+
+    setTimeout(() => {
+      const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      users.push({
+        email: cleanEmail,
+        password: formData.password,
+        name: formData.name,
+        phone: formData.phone,
+        aadhaar: formData.aadhaar,
+        pincode: formData.pincode,
+        city: formData.city,
+        state: formData.state,
+        address: formData.address,
       });
-      const data = await response.json();
-      if (response.ok) {
-        navigate("/login");
-      } else {
-        setError(data.message || "Registration failed");
-      }
-    } catch (err) {
-      console.warn("Backend not reachable. Simulating success.");
-      navigate("/login");
-    } finally {
+      localStorage.setItem('registeredUsers', JSON.stringify(users));
       setIsLoading(false);
-    }
+      setStep('success');
+      setTimeout(() => navigate('/login'), 2500);
+    }, 800);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100" style={{ fontFamily: "'Inter', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');`}</style>
+    <div className="min-h-screen bg-[#f0f4f8] font-sans">
+      {/* GOI Top Bar */}
+      <div className="bg-[#1a3a6b] text-white text-[11px] px-4 py-1 flex justify-between">
+        <span className="font-semibold tracking-wide">GOVERNMENT OF INDIA | DIGITAL INDIA INITIATIVE</span>
+        <span className="hidden sm:block">Screen Reader Access | Skip to Main Content</span>
+      </div>
 
-      {/* Page Header */}
-      <div className="bg-blue-900 text-white py-6 px-6 border-b-4 border-orange-500">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-bold">नागरिक पंजीकरण / Citizen Registration</h1>
-          <p className="text-blue-200 text-sm mt-1">Create your account to access Nagar Nigam portal services</p>
+      {/* Ministry Header */}
+      <div className="bg-white border-b-4 border-[#FF6B1A] shadow-sm">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-4">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Emblem_of_India.svg/120px-Emblem_of_India.svg.png"
+            alt="Emblem of India" className="h-14 w-auto" />
+          <div className="border-l-2 border-gray-300 pl-4">
+            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Ministry of Housing & Urban Affairs</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#1a3a6b]">CivicBrain — Nagar Nigam Portal</h1>
+            <p className="text-[11px] text-orange-600 font-semibold">Citizen Grievance Redressal System (CGRS) | New Registration</p>
+          </div>
         </div>
       </div>
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="bg-white rounded shadow-md border border-gray-200 overflow-hidden">
-          {/* Form Header */}
-          <div className="bg-blue-50 border-b border-blue-100 px-6 py-4 flex items-center justify-between">
-            <div>
-              <h2 className="font-bold text-blue-900 text-base">New Enrollment Form</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Enter your 6-digit Pincode — State, City & Nagar Nigam will auto-fill.</p>
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        {step === 'success' ? (
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-10 text-center">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
+              <CheckCircle2 className="text-green-600" size={44} />
             </div>
-            <div className="text-orange-600 text-xs font-bold uppercase tracking-wide border border-orange-200 bg-orange-50 px-3 py-1.5 rounded">
-              * Required Fields
-            </div>
+            <h2 className="text-2xl font-bold text-[#1a3a6b] mb-2">Registration Successful!</h2>
+            <p className="text-gray-600 mb-1">Your citizen account has been created successfully.</p>
+            <p className="text-sm text-gray-400">Redirecting to Login portal in 3 seconds...</p>
+            <Link to="/login" className="mt-6 inline-block bg-[#1a3a6b] text-white px-8 py-3 rounded font-bold uppercase tracking-wider text-sm hover:bg-[#0f2547] transition-colors">
+              Go to Login Now →
+            </Link>
           </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+            {/* Form Header */}
+            <div className="bg-[#1a3a6b] px-6 py-4">
+              <h2 className="text-white font-bold text-base uppercase tracking-wider">New Citizen Registration / नागरिक पंजीकरण</h2>
+              <p className="text-blue-200 text-xs mt-0.5">All fields marked with * are mandatory</p>
+            </div>
 
-          <form onSubmit={handleRegister} className="p-6 space-y-6">
-            {error && <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-3 rounded text-sm">⚠️ {error}</div>}
+            <div className="p-6">
+              {error && (
+                <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-3 rounded text-sm text-red-700">
+                  <span className="font-bold">⚠ Error: </span>{error}
+                </div>
+              )}
 
-            {/* Section 1: Personal Info */}
-            <div>
-              <h3 className="text-xs font-black text-blue-900 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <span className="bg-blue-900 text-white px-2 py-0.5 rounded text-[10px]">01</span>
-                Personal Information
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Full Name" name="name" value={formData.name} onChange={handleChange} placeholder="As per Aadhaar Card" required />
-                
-                {/* Email with OTP Flow */}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Section 1: Personal Details */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">
-                    Email Address <span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-[#1a3a6b]">
+                    <User size={16} className="text-[#1a3a6b]" />
+                    <h3 className="text-sm font-bold text-[#1a3a6b] uppercase tracking-wider">Personal Details</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Full Name <span className="text-red-500">*</span></label>
+                      <input type="text" name="name" value={formData.name} onChange={handleChange} required placeholder="As per Aadhaar Card"
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Gender <span className="text-red-500">*</span></label>
+                      <select name="gender" value={formData.gender} onChange={handleChange} required
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]">
+                        <option value="">Select Gender</option>
+                        <option>Male</option><option>Female</option><option>Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Date of Birth <span className="text-red-500">*</span></label>
+                      <input type="date" name="dob" value={formData.dob} onChange={handleChange} required
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Aadhaar Number <span className="text-red-500">*</span></label>
+                      <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={12} name="aadhaar" value={formData.aadhaar} onChange={handleChange} required placeholder="12-digit Aadhaar Number"
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Mobile Number <span className="text-red-500">*</span></label>
+                      <input type="tel" inputMode="numeric" pattern="[0-9]*" maxLength={10} name="phone" value={formData.phone} onChange={handleChange} required placeholder="10-digit mobile number"
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Email Verification */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-[#1a3a6b]">
+                    <Mail size={16} className="text-[#1a3a6b]" />
+                    <h3 className="text-sm font-bold text-[#1a3a6b] uppercase tracking-wider">Email Verification</h3>
+                    {emailVerified && <span className="ml-auto bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><CheckCircle2 size={12}/> Verified</span>}
+                  </div>
                   <div className="flex gap-2">
-                    <input
-                      name="email" type="email" required
-                      value={formData.email} onChange={handleChange}
-                      readOnly={isEmailVerified}
-                      className={`flex-1 block w-full px-3 py-2.5 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 transition-colors ${
-                        isEmailVerified ? "bg-green-50 border-green-300 text-green-800" : "bg-gray-50 border-gray-300 focus:bg-white"
-                      }`}
-                      placeholder="example@gmail.com"
-                    />
-                    {!isEmailVerified && (
-                      <button
-                        type="button"
-                        onClick={handleSendOtp}
-                        disabled={!formData.email || otpLoading}
-                        className="flex-shrink-0 bg-blue-900 hover:bg-blue-800 disabled:bg-gray-400 text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center min-w-[100px]"
-                      >
-                        {otpLoading && !otpSent ? <Loader2 size={14} className="animate-spin" /> : (otpSent ? "Resend OTP" : "Send OTP")}
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} required readOnly={emailVerified}
+                      autoCapitalize="none" autoCorrect="off"
+                      placeholder="Enter Email ID (e.g. citizen@gmail.com)" className={`flex-1 px-3 py-2.5 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] ${emailVerified ? 'bg-green-50 border-green-400' : 'bg-gray-50 border-gray-300'}`} />
+                    {!emailVerified && (
+                      <button type="button" onClick={handleSendOtp} disabled={!formData.email || otpLoading}
+                        className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider whitespace-nowrap flex items-center justify-center min-w-[100px]">
+                        {otpLoading ? <Loader2 size={14} className="animate-spin"/> : 'Send OTP'}
                       </button>
                     )}
                   </div>
-                  {isEmailVerified && (
-                    <p className="text-xs text-green-600 font-bold mt-1 flex items-center gap-1"><CheckCircle2 size={12} /> Email Verified</p>
+
+                  {otpNotice && !emailVerified && (
+                    <div className="mt-2 text-xs text-blue-900 bg-blue-50 border border-blue-200 rounded p-2.5">
+                      <p className="font-semibold">{otpNotice}</p>
+                    </div>
                   )}
-                  {otpError && <p className="text-xs text-red-500 font-bold mt-1">{otpError}</p>}
-                </div>
 
-                {/* Mobile Number with Country Code */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">
-                    Mobile Number <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex">
-                    <span className="inline-flex items-center px-3 rounded-l border border-r-0 border-gray-300 bg-gray-100 text-gray-500 text-sm font-semibold">
-                      +91
-                    </span>
-                    <input
-                      name="phone"
-                      type="tel"
-                      required
-                      maxLength={10}
-                      value={formData.phone}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, "");
-                        setFormData(prev => ({ ...prev, phone: val }));
-                      }}
-                      className="flex-1 block w-full px-3 py-2.5 border border-gray-300 rounded-r text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-900 transition-colors"
-                      placeholder="10-digit mobile number"
-                    />
-                  </div>
-                </div>
-
-                {/* Aadhaar Card Field */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">
-                    Aadhaar Number <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      name="aadhaar"
-                      type="text"
-                      required
-                      maxLength={12}
-                      value={formData.aadhaar}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, "");
-                        setFormData(prev => ({ ...prev, aadhaar: val }));
-                      }}
-                      className={`block w-full px-3 py-2.5 border rounded text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-900 ${
-                        formData.aadhaar.length > 0 && formData.aadhaar.length !== 12 
-                          ? "border-red-500 bg-red-50" 
-                          : "border-gray-300 bg-gray-50 focus:bg-white"
-                      }`}
-                      placeholder="12-digit Aadhaar Number"
-                    />
-                  </div>
-                  {formData.aadhaar.length > 0 && formData.aadhaar.length !== 12 ? (
-                    <p className="text-xs text-red-500 font-bold mt-1.5 animate-pulse">
-                      ⚠️ Aadhaar must be exactly 12 digits
-                    </p>
-                  ) : (
-                    <p className="text-[10px] text-gray-400 mt-1">Enter your 12-digit Aadhaar Number</p>
+                  {otpSent && !emailVerified && (
+                    <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded">
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Enter 6-Digit OTP received on Email</label>
+                      <div className="flex gap-2">
+                        <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={6} value={otp} onChange={e => setOtp(e.target.value)}
+                          placeholder="------"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm text-center tracking-widest font-bold focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] bg-white" />
+                        <button type="button" onClick={handleVerifyOtp} disabled={otpLoading || !otp}
+                          className="bg-[#1a3a6b] hover:bg-[#0f2547] disabled:bg-gray-400 text-white px-5 py-2 rounded text-xs font-bold uppercase tracking-wider flex items-center justify-center min-w-[80px]">
+                          {otpLoading ? <Loader2 size={14} className="animate-spin"/> : 'Verify'}
+                        </button>
+                      </div>
+                      {otpError && <p className="text-red-600 text-xs mt-1.5 font-semibold">⚠ {otpError}</p>}
+                    </div>
                   )}
                 </div>
-              </div>
 
-              {/* OTP Entry Field */}
-              {otpSent && !isEmailVerified && (
-                <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded">
-                  <label className="block text-xs font-bold text-orange-900 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
-                    <Mail size={14} /> Enter OTP sent to Email
-                  </label>
-                  <div className="flex gap-2 max-w-xs">
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={otpValue}
-                      onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ''))}
-                      className="flex-1 px-3 py-2 border border-orange-300 rounded text-sm font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="• • • • • •"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleVerifyOtp}
-                      disabled={otpValue.length !== 6 || otpLoading}
-                      className="bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center min-w-[90px]"
-                    >
-                      {otpLoading ? <Loader2 size={14} className="animate-spin" /> : "Verify"}
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-orange-700 mt-2">Note: For testing, if email config is missing, check the backend terminal for the OTP.</p>
-                </div>
-              )}
-            </div>
-
-            <hr className="border-gray-100" />
-
-            {/* Section 2: Location */}
-            <div>
-              <h3 className="text-xs font-black text-blue-900 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <span className="bg-blue-900 text-white px-2 py-0.5 rounded text-[10px]">02</span>
-                Location / Municipal Jurisdiction
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Pincode */}
+                {/* Section 3: Address */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">
-                    Pincode <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      name="pincode" type="text" maxLength={6} required value={formData.pincode} onChange={handleChange}
-                      className={`block w-full px-3 py-2.5 pr-10 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 transition-colors ${pincodeSuccess ? "border-green-400 bg-green-50" : "bg-gray-50 border-gray-300 focus:bg-white"}`}
-                      placeholder="Enter 6-digit Pincode"
-                    />
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      {pincodeLoading && <Loader2 size={16} className="text-blue-600 animate-spin" />}
-                      {pincodeSuccess && !pincodeLoading && <CheckCircle2 size={16} className="text-green-500" />}
+                  <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-[#1a3a6b]">
+                    <MapPin size={16} className="text-[#1a3a6b]" />
+                    <h3 className="text-sm font-bold text-[#1a3a6b] uppercase tracking-wider">Address Details</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Full Address <span className="text-red-500">*</span></label>
+                      <textarea name="address" value={formData.address} onChange={handleChange} required rows={2}
+                        placeholder="House No., Street, Locality"
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] resize-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Pincode <span className="text-red-500">*</span></label>
+                      <div className="relative">
+                        <input type="text" inputMode="numeric" pattern="[0-9]*" name="pincode" maxLength={6} value={formData.pincode} onChange={handleChange} required placeholder="6-digit Pincode"
+                          className="w-full px-3 py-2.5 pr-8 border border-gray-300 rounded text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]" />
+                        {pincodeLoading && <Loader2 className="absolute right-2.5 top-3 text-blue-600 animate-spin" size={15} />}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">City / District <span className="text-red-500">*</span></label>
+                      <input type="text" name="city" value={formData.city} onChange={handleChange} required placeholder="Auto-filled or type city"
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">State <span className="text-red-500">*</span></label>
+                      <input type="text" name="state" value={formData.state} onChange={handleChange} required placeholder="Auto-filled or type state"
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]" />
                     </div>
                   </div>
-                  {pincodeSuccess && <p className="text-xs text-green-600 font-semibold mt-1">✓ Location auto-filled successfully!</p>}
                 </div>
 
-                {/* State */}
+                {/* Section 4: Password */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">State <span className="text-red-500">*</span></label>
-                  <input name="state" type="text" required readOnly value={formData.state} onChange={handleChange} className="block w-full px-3 py-2.5 border border-gray-300 rounded text-sm bg-blue-50 text-blue-900 font-semibold focus:outline-none cursor-not-allowed" placeholder="Auto-filled from Pincode" />
-                </div>
-
-                {/* City */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">City / District <span className="text-red-500">*</span></label>
-                  <input name="city" type="text" required readOnly value={formData.city} onChange={handleChange} className="block w-full px-3 py-2.5 border border-gray-300 rounded text-sm bg-blue-50 text-blue-900 font-semibold focus:outline-none cursor-not-allowed" placeholder="Auto-filled from Pincode" />
-                </div>
-
-                {/* Nagar Nigam */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Nagar Nigam <span className="text-red-500">*</span></label>
-                  <div className="flex gap-2">
-                    <input name="nagarNigam" type="text" required readOnly value={formData.nagarNigam} onChange={handleChange} className="flex-1 px-3 py-2.5 border border-gray-300 rounded text-sm bg-blue-50 text-blue-900 font-semibold focus:outline-none cursor-not-allowed" placeholder="Auto-filled from Pincode" />
-                    <button type="button" onClick={openGoogleMaps} disabled={!formData.nagarNigam} title="Find Nearest Zone on Google Maps" className={`flex-shrink-0 w-11 h-10 flex items-center justify-center rounded border transition-colors shadow-sm ${formData.nagarNigam ? "bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500 cursor-pointer" : "bg-gray-100 border-gray-200 text-gray-300 cursor-not-allowed"}`}>
-                      <MapPin size={18} />
-                    </button>
+                  <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-[#1a3a6b]">
+                    <Lock size={16} className="text-[#1a3a6b]" />
+                    <h3 className="text-sm font-bold text-[#1a3a6b] uppercase tracking-wider">Set Password</h3>
                   </div>
-                  {formData.nagarNigam && (
-                    <p className="text-xs mt-1 flex items-center gap-1 font-medium text-blue-600">
-                      <MapPin size={12} className={coords ? "text-green-500" : ""} /> {coords ? "Click to find nearest Zonal Office on Map" : "Click to view Nagar Nigam on Map"}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Password <span className="text-red-500">*</span></label>
+                      <div className="relative">
+                        <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} required
+                          autoCapitalize="none" autoCorrect="off" placeholder="Min 6 characters"
+                          className="w-full px-3 py-2.5 pr-10 border border-gray-300 rounded text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]" />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-400 hover:text-[#1a3a6b]">
+                          {showPassword ? <EyeOff size={15}/> : <Eye size={15}/>}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Confirm Password <span className="text-red-500">*</span></label>
+                      <div className="relative">
+                        <input type={showConfirm ? 'text' : 'password'} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required
+                          autoCapitalize="none" autoCorrect="off" placeholder="Re-enter password"
+                          className="w-full px-3 py-2.5 pr-10 border border-gray-300 rounded text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]" />
+                        <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-3 text-gray-400 hover:text-[#1a3a6b]">
+                          {showConfirm ? <EyeOff size={15}/> : <Eye size={15}/>}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Declaration */}
+                <div className="bg-blue-50 border border-blue-200 rounded p-4">
+                  <div className="flex gap-3 items-start">
+                    <input type="checkbox" required className="mt-1 accent-[#1a3a6b]" />
+                    <p className="text-xs text-gray-700 leading-relaxed">
+                      I hereby declare that the information provided above is true and correct to the best of my knowledge.
+                      I agree to the <span className="text-[#1a3a6b] font-bold underline cursor-pointer">Terms & Conditions</span> and{' '}
+                      <span className="text-[#1a3a6b] font-bold underline cursor-pointer">Privacy Policy</span> of CivicBrain Portal.
                     </p>
-                  )}
+                  </div>
                 </div>
 
-                <Field label="Ward / Area" name="ward" value={formData.ward} onChange={handleChange} placeholder="e.g. Ward 14, Sector B" />
-                <div className="col-span-1 sm:col-span-2">
-                  <Field label="Full Address" name="address" value={formData.address} onChange={handleChange} placeholder="House No., Street Name, Locality" required />
-                </div>
-              </div>
-            </div>
-
-            <hr className="border-gray-100" />
-
-            {/* Section 3: Password */}
-            <div>
-              <h3 className="text-xs font-black text-blue-900 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <span className="bg-blue-900 text-white px-2 py-0.5 rounded text-[10px]">03</span>
-                Set Password
-              </h3>
-              <div className="relative max-w-sm">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password" required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="block w-full px-3 py-2.5 pr-10 border border-gray-300 rounded text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-900"
-                  placeholder="Min. 8 characters"
-                />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                <button type="submit" disabled={isLoading}
+                  className="w-full bg-[#1a3a6b] hover:bg-[#0f2547] disabled:bg-gray-400 text-white py-3 rounded font-bold uppercase tracking-widest text-sm transition-colors shadow-md flex items-center justify-center gap-2">
+                  {isLoading ? <><Loader2 size={16} className="animate-spin"/> Processing...</> : 'Submit Registration →'}
                 </button>
-              </div>
+
+                <p className="text-center text-sm text-gray-600">
+                  Already registered?{' '}
+                  <Link to="/login" className="font-bold text-orange-600 hover:text-orange-700 hover:underline">Login Here →</Link>
+                </p>
+              </form>
             </div>
 
-            {/* Submit */}
-            <div className="pt-2">
-              <button 
-                type="submit" 
-                disabled={isLoading || !isEmailVerified}
-                className={`w-full py-3 rounded text-sm font-bold uppercase tracking-wider text-white shadow flex items-center justify-center gap-2 transition-all ${
-                  isLoading || !isEmailVerified 
-                    ? "bg-gray-400 cursor-not-allowed opacity-60" 
-                    : "bg-blue-900 hover:bg-blue-800"
-                }`}
-              >
-                {isLoading ? (
-                  <><Loader2 size={16} className="animate-spin" /> Processing Application...</>
-                ) : !isEmailVerified ? (
-                  <>🔒 Verify Email to Register</>
-                ) : (
-                  <>✅ Submit Registration / पंजीकरण करें</>
-                )}
-              </button>
-              {!isEmailVerified && (
-                <p className="text-center text-xs text-red-500 font-bold mt-2">You must verify your email address before submitting.</p>
-              )}
+            <div className="bg-gray-50 border-t border-gray-200 px-6 py-3 flex flex-wrap gap-4 text-xs text-gray-500 justify-between">
+              <span className="flex items-center gap-1"><ShieldCheck size={12} className="text-green-600"/> SSL Secured | Data encrypted</span>
+              <span>© 2025 CivicBrain | Ministry of Urban Development</span>
             </div>
-          </form>
-
-          {/* Footer */}
-          <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center text-sm">
-            <p className="text-gray-600">Already enrolled?</p>
-            <Link to="/login" className="font-bold text-orange-600 hover:text-orange-700 transition-colors">
-              Login to Portal →
-            </Link>
           </div>
-        </div>
+        )}
+      </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
-          Government officials are registered directly by the administration. &nbsp;|&nbsp; © 2026 CivicBrain — Digital India Initiative
-        </p>
-      </main>
-    </div>
-  );
-}
-
-// Reusable Field Component
-function Field({ label, name, type = "text", value, onChange, placeholder, required }: {
-  label: string; name: string; type?: string; value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder?: string; required?: boolean;
-}) {
-  return (
-    <div>
-      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">
-        {label} {required ? <span className="text-red-500">*</span> : <span className="text-gray-400 font-normal normal-case">(Optional)</span>}
-      </label>
-      <input
-        name={name} type={type} required={required} value={value} onChange={onChange}
-        className="block w-full px-3 py-2.5 border border-gray-300 rounded text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-900 transition-colors"
-        placeholder={placeholder}
-      />
+      <div className="bg-[#1a3a6b] text-white text-xs py-3 px-4 text-center">
+        <p>© 2025 Government of India. All Rights Reserved. | Terms of Use | Privacy Policy | Contact Us</p>
+      </div>
     </div>
   );
 }

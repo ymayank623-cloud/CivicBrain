@@ -113,14 +113,7 @@ export default function Home() {
             )}
           </motion.div>
 
-          {/* Signature Block */}
-          <motion.div variants={fadeUp} className="flex items-center gap-4 pt-8 border-t border-gray-200">
-            <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop" alt="Commissioner" className="w-14 h-14 rounded-full object-cover shadow-sm border border-gray-200" />
-            <div>
-              <p className="font-serif italic text-xl text-[#111827] font-bold">Dr. A.K. Sharma</p>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-0.5">{t("Municipal Commissioner", "नगर आयुक्त")}</p>
-            </div>
-          </motion.div>
+          
         </motion.div>
       </section>
 
@@ -326,6 +319,7 @@ export default function Home() {
     </div>
   );
 }
+
 
 
 

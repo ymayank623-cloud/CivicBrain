@@ -106,19 +106,19 @@ export default function GovNavbar() {
 
             <div className="flex-1" />
 
-            {/* Dynamic role links */}
+            {/* namic role links */}
             {!user && (
               <>
                 <NavLink to="/register" label={t("New Registration", "नया पंजीकरण")} active={isActive("/register")} />
                 <Link to="/login" className="ml-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold uppercase tracking-wide px-4 py-1.5 rounded transition-colors">
-                  {t("Login →", "लॉगिन →")}
+                  {t("Login ", "लॉगिन ")}
                 </Link>
               </>
             )}
 
             {user?.role === "CITIZEN" && (
               <>
-                <NavLink to="/citizen/new-complaint" label="📝 File Complaint" active={isActive("/citizen/new-complaint")} />
+                <NavLink to="/citizen/new-complaint" label="� File Complaint" active={isActive("/citizen/new-complaint")} />
                 <NavLink to="/citizen/dashboard" label="📋 My Tickets" active={isActive("/citizen/dashboard")} />
                 <div className="flex items-center bg-blue-900 border border-blue-700 px-3 py-1 rounded text-xs font-bold text-orange-300 ml-1">
                   <Award size={12} className="mr-1" /> {user.karmaPoints || 40} pts
@@ -143,7 +143,7 @@ export default function GovNavbar() {
             )}
             {user?.role === "COMMISSIONER" && (
               <>
-                <NavLink to="/admin/dashboard" label="🗺️ War Room" active={isActive("/admin/dashboard")} />
+                <NavLink to="/admin/dashboard" label="� War Room" active={isActive("/admin/dashboard")} />
                 <Link to="/profile" className="ml-3 text-blue-200 hover:text-white transition-colors" title="My Profile"><User size={16} /></Link>
                 <button onClick={handleLogout} className="ml-3 text-blue-200 hover:text-red-400 transition-colors" title="Logout"><LogOut size={16} /></button>
               </>

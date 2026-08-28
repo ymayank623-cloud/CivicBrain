@@ -192,11 +192,11 @@ export default function OfficerDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         
-        {/* Dynamic Route Optimizer Section */}
+        {/* namic Route Optimizer Section */}
         <div className="mb-8 bg-white rounded shadow border border-gray-300 overflow-hidden">
           <div className="p-5 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center bg-gray-50">
             <div>
-              <h2 className="text-xl font-bold text-blue-900">Dynamic Route Optimizer</h2>
+              <h2 className="text-xl font-bold text-blue-900">namic Route Optimizer</h2>
               <p className="text-gray-600 text-sm mt-1">AI-generated optimal path for active inspections.</p>
             </div>
             <button 

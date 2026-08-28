@@ -22,7 +22,7 @@ export default function DepartmentDashboard() {
   // Tickets State
   const [tickets, setTickets] = useState<any[]>([]);
 
-  // Dynamic Metrics
+  // namic Metrics
   const metrics = {
     deptName: "Civic Utilities Board",
     activeTickets: tickets.length,
@@ -182,7 +182,7 @@ export default function DepartmentDashboard() {
                 {tickets.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-12 text-center text-gray-500 font-medium">
-                      No active tickets matching this criteria. Everything is clean! ðŸƒ
+                      No active tickets matching this criteria. Everything is clean! ✅
                     </td>
                   </tr>
                 ) : (

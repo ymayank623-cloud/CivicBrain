@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -6,6 +6,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 
 const authRoutes = require('./routes/authRoutes');
+const otpRoutes = require('./routes/otpRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
 const runEscalationEngine = require('./services/escalationCron');
@@ -48,6 +49,7 @@ mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 2000 })
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/otp', otpRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/complaints', complaintRoutes);
 

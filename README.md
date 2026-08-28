@@ -1,109 +1,144 @@
 <div align="center">
 
-# 🏛️ CivicBrain
-## Municipal Citizen Grievance Redressal System (CGRS)
-
+# 🏛️ CivicBrain — Municipal Citizen Grievance Redressal System (CGRS)
 ### *Pioneering Data-Driven Urban Intelligence for Smart Governance*
 
 [![Vercel](https://img.shields.io/badge/Vercel-Deployed-success?style=for-the-badge&logo=vercel)](https://civicbrain-nigam.vercel.app)
-[![React](https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react)](https://react.dev/)
+[![React](https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
-[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Digital India](https://img.shields.io/badge/Digital_India-Initiative-orange?style=for-the-badge)](#)
 
-<br>
+---
 
-### 🌐 Live Demo
-
-**[https://civicbrain-nigam.vercel.app](https://civicbrain-nigam.vercel.app)**
+**🌐 Live Demo:** [https://civicbrain-nigam.vercel.app](https://civicbrain-nigam.vercel.app)
 
 </div>
 
 ---
 
-# 📌 Table of Contents
+## 📌 Project Overview
 
-- [About the Project](#-about-the-project)
-- [Problem Statement](#-problem-statement)
-- [Our Solution](#-our-solution)
-- [Key Features](#-key-features)
-- [System Workflow](#-system-workflow)
-- [User Roles](#-user-roles)
-- [Tech Stack](#-tech-stack)
-- [Project Architecture](#-project-architecture)
-- [Installation & Setup](#-installation--setup)
-- [Environment Variables](#-environment-variables)
-- [Usage](#-usage)
-- [Screenshots](#-screenshots)
-- [Future Scope](#-future-scope)
-- [Contributors](#-contributors)
-- [License](#-license)
+**CivicBrain** is an AI-powered next-generation Municipal Governance and Citizen Grievance Redressal Platform (CGRS) built under the **Digital India & Smart Cities Mission** framework. 
+
+It eliminates the traditional delays, bureaucratic bottlenecks, and duplicate complaints in municipal corporations by merging **Geospatial AI Clustering**, **Computer Vision Verification**, **Real-Time SLA Countdown Engines**, and **Multi-Tier Role Portals** into a unified e-Governance ecosystem.
 
 ---
 
-# 🏛️ About the Project
+## 🚀 6 Key Features
 
-**CivicBrain** is an AI-powered Municipal Citizen Grievance Redressal System (CGRS) designed to modernize the way citizens report and track civic issues.
+### 1. 🤖 AI-Powered Spatial Clustering & Duplicate Prevention
+- **Haversine Geo-Clustering:** Automatically detects complaints filed within a **50-meter radius** under the same civic category (e.g., potholes, drainage, streetlights).
+- **Master Ticket Grouping:** Instead of creating redundant tickets for field officers, it links nearby complaints to a single **Master Ticket**, increasing the `impactedCount` and dynamically escalating priority (`MEDIUM ➔ HIGH ➔ CRITICAL`).
 
-The platform connects **citizens, field officers, department heads, and municipal commissioners** through a unified digital governance ecosystem.
+### 2. ⏱️ Real-Time Live Status Tracking with SLA Escalation
+- **Visual Progress Pipeline:** 5-stage live status tracking (`Submitted ➔ Clustered/Triaged ➔ Assigned to Field Officer ➔ Work in Progress ➔ Resolved & Verified`).
+- **SLA Countdown Timers:** Dedicated Service Level Agreement (SLA) timers ensure automatic escalation to Department Heads if grievances are not resolved on schedule.
 
-It uses technologies such as:
+### 3. 👥 Multi-Tier Role-Based Dashboards
+- **Citizen Portal:** File grievances, auto-fill address from pincode, manage & edit submitted tickets, live status tracking.
+- **Field Officer Portal:** Geolocation map routing, prioritized task list based on impact count, instant status updates, and resolution image uploads.
+- **Department Head Dashboard:** Real-time departmental metrics, officer workload balancing, and SLA compliance monitoring.
+- **Municipal Commissioner Dashboard:** City-wide heatmaps, real-time civic health score, and cross-departmental analytics.
 
-- 🤖 AI-powered complaint classification
-- 📍 Geospatial complaint clustering
-- 🔄 Duplicate complaint detection
-- ⏱️ Real-time SLA monitoring
-- 📸 Evidence-based verification
-- 💬 AI-powered civic assistance
-- 📊 Department and city-level analytics
-- 🔐 Role-based authentication
+### 4. 💬 Intelligent AI Civic Assistant & Report Bot
+- **Interactive Multi-Turn Bot:** An in-portal conversational assistant allowing citizens to report issues, describe problems in natural language, attach evidence, or track tickets directly via chat.
+- **Mobile-Responsive Floating Interface:** Seamlessly adapts to any screen with instant keyword suggestions (e.g., *"Report Pothole"*, *"Track my ticket"*).
 
-The goal is to make municipal grievance management **faster, more transparent, data-driven, and citizen-centric**.
+### 5. 🏛️ Government-Grade Auth & Email OTP Verification
+- **Official Nagar Nigam Design:** Styled with national emblems, Ministry of Housing & Urban Affairs headers, and official typography.
+- **Real Gmail SMTP OTP Delivery:** Sends 6-digit cryptographic verification codes directly to the user's Gmail inbox for registration and password recovery.
+- **Accessible & Cross-Device Compatible:** Supports mobile numeric inputs, case-insensitive login, and WCAG accessibility standards.
 
----
-
-# ❗ Problem Statement
-
-Traditional municipal grievance systems often face several challenges:
-
-- Duplicate complaints about the same issue
-- Lack of real-time complaint tracking
-- Delayed assignment of complaints to officers
-- Poor coordination between departments
-- Limited transparency for citizens
-- Difficulty monitoring officer workloads
-- Lack of photographic verification
-- Delayed escalation of unresolved complaints
-
-These issues can result in **longer resolution times and reduced citizen satisfaction**.
+### 6. 📸 AI Vision Evidence & Verification Engine
+- **Before & After Photo Proof:** Field officers upload photographic proof upon resolving issues, preventing false closures.
+- **Visual Audit Trail:** Citizens can inspect evidence photos alongside officer remarks for maximum municipal transparency.
 
 ---
 
-# 💡 Our Solution
+## 🛠️ Tech Stack
 
-CivicBrain provides a centralized platform where a complaint can move through the complete lifecycle:
+| Layer | Technologies Used |
+|---|---|
+| **Frontend** | React 18, Vite, TypeScript, Tailwind CSS, Framer Motion, Lucide Icons |
+| **Mapping & GIS** | Leaflet, React-Leaflet, OpenStreetMap, Postal Pincode API |
+| **Backend & APIs** | Node.js, Express.js, Socket.IO, Nodemailer (Gmail SMTP) |
+| **AI / ML Service** | Python, FastAPI, Haversine Spatial Geometry, Uvicorn |
+| **State & Storage** | LocalStorage Engine + MongoDB (Mongoose ODM) |
+| **Deployment** | Vercel (Production CI/CD), LocalTunnel |
 
-```text
-Citizen
-   ↓
-Complaint Submission
-   ↓
-AI Classification & Validation
-   ↓
-Duplicate / Geo-Spatial Detection
-   ↓
-Master Ticket Creation
-   ↓
-Department Assignment
-   ↓
-Field Officer Assignment
-   ↓
-Work In Progress
-   ↓
-Resolution Evidence Upload
-   ↓
-Verification
-   ↓
-Complaint Closed
+---
+
+## 📁 Project Architecture
+
+```
+CivicBrain/
+├── frontend/                 # React + Vite + TypeScript Frontend
+│   ├── src/
+│   │   ├── components/       # GovNavbar, AIChatBot, ProtectedRoute, etc.
+│   │   ├── context/          # Language Context (Hindi/English)
+│   │   ├── pages/            # Citizen, Officer, Dept, Commissioner Dashboards, Login, Register
+│   │   └── App.tsx           # Client Routing & Layouts
+│   ├── vercel.json           # SPA Rewrite & Routing Rules
+│   └── package.json
+├── backend/                  # Express.js Backend
+│   ├── routes/               # authRoutes, otpRoutes, complaintRoutes, adminRoutes
+│   ├── server.js             # Express Server, Nodemailer & Socket.IO
+│   └── package.json
+└── ai-service/               # Python AI Service
+    ├── app.py                # AI triaging & classification
+    └── requirements.txt
+```
+
+---
+
+## 💻 Installation & Local Setup
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/your-username/CivicBrain.git
+cd CivicBrain
+```
+
+### 2. Setup & Run Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+*Frontend runs on `http://localhost:5173`*
+
+### 3. Setup & Run Backend
+```bash
+cd ../backend
+npm install
+npm run dev
+```
+*Backend runs on `http://localhost:5001`*
+
+### 4. Setup & Run AI Service (Optional)
+```bash
+cd ../ai-service
+pip install -r requirements.txt
+python app.py
+```
+*AI Service runs on `http://localhost:8000`*
+
+---
+
+## 🔒 Demo Credentials (For Evaluation)
+
+| Role | Email ID | Password | Access Level |
+|---|---|---|---|
+| **Master Citizen** | `ymayank623@gmail.com` | `Mayank8492` | File, track, & edit grievances |
+| **Field Officer** | `officer@demo.com` | *any password* | Task resolution, before/after images |
+| **Department Head** | `dept@demo.com` | *any password* | Officer auto-assignment, SLA metrics |
+| **Commissioner** | `admin@demo.com` | *any password* | City-wide heatmaps & analytics |
+
+---
+
+## 📜 License & Acknowledgements
+
+- Built for **Hackathon / Smart Governance Innovations**.
+- Inspired by the **Digital India Initiative** & **Ministry of Housing and Urban Affairs (MoHUA)**.

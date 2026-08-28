@@ -17,7 +17,7 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Component to dynamically change map view when coordinates update
+// Component to namically change map view when coordinates update
 function ChangeView({ center }: { center: [number, number] }) {
   const map = useMap();
   map.setView(center, 16);
@@ -333,7 +333,7 @@ export default function NewComplaint() {
               <div className="bg-yellow-50/50 border border-yellow-200 p-4 mb-6 rounded-xl flex items-start">
                 <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
                 <p className="text-sm text-yellow-700 font-medium">
-                  If this issue already exists in our system near your location, it will be automatically clustered into the Master Ticket to prioritize resolution.
+                  If this issue alrea exists in our system near your location, it will be automatically clustered into the Master Ticket to prioritize resolution.
                 </p>
               </div>
               <button
