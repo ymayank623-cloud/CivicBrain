@@ -526,10 +526,26 @@ export default function OfficerDashboard() {
                   </p>
                 </div>
 
-                {selectedTask.imageUrl && (
-                  <div className="rounded-lg overflow-hidden border border-gray-300 shadow-sm">
-                    <div className="bg-gray-100 text-[10px] font-bold text-gray-700 uppercase tracking-wide px-3 py-1 border-b border-gray-200">Citizen Evidence Photo</div>
-                    <img src={selectedTask.imageUrl} alt="Citizen Upload" className="w-full max-h-44 object-cover" />
+                {(selectedTask.imageUrl || selectedTask.afterImageUrl) && (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="rounded-lg overflow-hidden border border-gray-300 shadow-sm">
+                        <div className="bg-gray-100 text-[9px] font-bold text-gray-700 uppercase tracking-wide px-2 py-1 border-b border-gray-200">1. Citizen Photo (Before)</div>
+                        {selectedTask.imageUrl ? (
+                          <img src={selectedTask.imageUrl} alt="Citizen Upload" className="w-full h-28 object-cover" />
+                        ) : (
+                          <div className="h-28 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400">No Image</div>
+                        )}
+                      </div>
+                      <div className="rounded-lg overflow-hidden border border-green-300 shadow-sm">
+                        <div className="bg-green-100 text-[9px] font-bold text-green-800 uppercase tracking-wide px-2 py-1 border-b border-green-200">2. Officer Proof (After)</div>
+                        {selectedTask.afterImageUrl ? (
+                          <img src={selectedTask.afterImageUrl} alt="After resolution" className="w-full h-28 object-cover" />
+                        ) : (
+                          <div className="h-28 bg-green-50 flex items-center justify-center text-[10px] text-green-600 font-medium">Pending Upload</div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
 

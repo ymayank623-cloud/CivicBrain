@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   FileText, PlusCircle, AlertTriangle, Bell, MapPin, 
@@ -338,9 +338,45 @@ export default function CitizenDashboard() {
                   </div>
                 )}
                 
-                {selectedTicket.imageUrl && (
-                  <div className="mb-6 rounded-xl overflow-hidden h-40 w-full border border-gray-200">
-                    <img src={selectedTicket.imageUrl} alt="Evidence" className="w-full h-full object-cover" />
+                {/* Before vs After Photos */}
+                {(selectedTicket.imageUrl || selectedTicket.afterImageUrl) && (
+                  <div className="mb-6">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-gray-50 rounded-xl overflow-hidden border border-gray-200 p-2">
+                        <span className="text-[10px] font-bold uppercase text-gray-500 block mb-1">
+                          Before (Citizen Evidence)
+                        </span>
+                        <div className="h-32 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                          {selectedTicket.imageUrl ? (
+                            <img src={selectedTicket.imageUrl} alt="Before complaint" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-xs text-gray-400">No Image</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="bg-green-50/50 rounded-xl overflow-hidden border border-green-200 p-2">
+                        <span className="text-[10px] font-bold uppercase text-green-800 block mb-1">
+                          After (Officer Proof)
+                        </span>
+                        <div className="h-32 bg-green-100 rounded-lg overflow-hidden flex items-center justify-center border border-green-300">
+                          {selectedTicket.afterImageUrl ? (
+                            <img src={selectedTicket.afterImageUrl} alt="After resolution proof" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="text-center p-2">
+                              <span className="text-xs text-gray-400 block">Pending Repair</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {selectedTicket.remarks && (
+                      <div className="mt-3 bg-gray-50 p-3 rounded-lg border border-gray-200 text-xs text-gray-700">
+                        <strong className="text-gray-900 block mb-0.5">Officer Resolution Remarks:</strong>
+                        {selectedTicket.remarks}
+                      </div>
+                    )}
                   </div>
                 )}
                 

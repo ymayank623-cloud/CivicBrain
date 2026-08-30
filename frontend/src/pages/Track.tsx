@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Clock, Truck, CheckCircle2, Star, Image as ImageIcon, Bot } from 'lucide-react';
 
@@ -113,14 +113,60 @@ export default function Track() {
               </div>
             </div>
 
-            {ticket.imageUrl && (
-              <div className="bg-gray-50 p-6 border-b border-gray-100">
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center">
-                  <ImageIcon size={14} className="mr-2" /> Uploaded Evidence
-                </h3>
-                <div className="relative rounded-lg overflow-hidden border border-gray-200 shadow-sm aspect-video bg-gray-200">
-                  <img src={ticket.imageUrl} alt="Evidence" className="w-full h-full object-cover" />
+            {/* Before / After Photo Comparison Section */}
+            {(ticket.imageUrl || ticket.afterImageUrl) && (
+              <div className="bg-gray-50 p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xs font-bold text-gray-700 uppercase tracking-widest flex items-center">
+                    <ImageIcon size={15} className="mr-2 text-blue-900" /> Photographic Proof (Before vs After)
+                  </h3>
+                  {ticket.afterImageUrl && (
+                    <span className="text-[10px] font-bold bg-green-100 text-green-800 border border-green-300 px-2.5 py-0.5 rounded-full uppercase flex items-center">
+                      <CheckCircle2 size={11} className="mr-1" /> Verified Resolution Proof
+                    </span>
+                  )}
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Before Citizen Photo */}
+                  <div className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm p-3">
+                    <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider block mb-2">
+                      1. Citizen Evidence (Before)
+                    </span>
+                    <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                      {ticket.imageUrl ? (
+                        <img src={ticket.imageUrl} alt="Before complaint evidence" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-xs text-gray-400">No Citizen Photo</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* After Municipal Repair Photo */}
+                  <div className="bg-white rounded-xl overflow-hidden border border-green-200 shadow-sm p-3">
+                    <span className="text-[10px] font-bold uppercase text-green-800 tracking-wider block mb-2 flex items-center">
+                      <CheckCircle2 size={12} className="mr-1 text-green-600" /> 2. Field Officer Resolution (After)
+                    </span>
+                    <div className="aspect-video bg-green-50/50 rounded-lg overflow-hidden flex items-center justify-center border border-green-300">
+                      {ticket.afterImageUrl ? (
+                        <img src={ticket.afterImageUrl} alt="After repair proof" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-center p-4">
+                          <Clock size={20} className="mx-auto text-gray-400 mb-1" />
+                          <span className="text-xs text-gray-500 font-medium block">Repair in Progress</span>
+                          <span className="text-[10px] text-gray-400 block mt-0.5">Resolution photo will appear once officer completes repair</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {ticket.remarks && (
+                  <div className="mt-4 bg-white p-3.5 rounded-xl border border-gray-200 text-xs text-gray-700">
+                    <strong className="text-gray-900 block mb-0.5">Field Officer Remarks:</strong>
+                    {ticket.remarks}
+                  </div>
+                )}
               </div>
             )}
 
