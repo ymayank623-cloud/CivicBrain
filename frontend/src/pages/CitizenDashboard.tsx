@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { 
   FileText, PlusCircle, AlertTriangle, Bell, MapPin, 
   CreditCard, Droplets, Baby, Briefcase, ChevronRight, Search, Phone, X,
-  Camera, Upload
+  Camera
 } from "lucide-react";
 
 export default function CitizenDashboard() {
