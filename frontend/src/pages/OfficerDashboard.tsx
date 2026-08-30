@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 
@@ -122,7 +122,11 @@ export default function OfficerDashboard() {
   const handleUploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setAfterImage(URL.createObjectURL(file));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAfterImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -138,8 +142,7 @@ export default function OfficerDashboard() {
     const demoComplaints = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
     const updated = demoComplaints.map((c: any) => c._id === taskId ? { ...c, remarks: newRemarks } : c);
     localStorage.setItem("mockComplaints", JSON.stringify(updated));
-    
-    
+    alert("Progress updates saved successfully.");
   };
 
   const handleArchiveTask = (taskId: string) => {
@@ -149,37 +152,24 @@ export default function OfficerDashboard() {
     const demoComplaints = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
     const updated = demoComplaints.map((c: any) => c._id === taskId ? { ...c, status: 'ARCHIVED' } : c);
     localStorage.setItem("mockComplaints", JSON.stringify(updated));
-    
-    
-  };
-
-  const handleResolveTaskWithoutImage = (taskId: string) => {
-    // Update local state
-    setTasks(tasks.map(t => t._id === taskId ? { ...t, status: 'RESOLVED' } : t));
-    setSelectedTask({ ...selectedTask, status: 'RESOLVED' });
-    
-    // Update global mock storage
-    const demoComplaints = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
-    const updated = demoComplaints.map((c: any) => c._id === taskId ? { ...c, status: 'RESOLVED' } : c);
-    localStorage.setItem("mockComplaints", JSON.stringify(updated));
-    
-    
   };
 
   const handleResolveTask = (taskId: string) => {
-    if (!afterImage) return 
+    if (!afterImage) {
+      alert("Mandatory Verification Error: You must upload an 'After Resolution' photo proof before closing this ticket.");
+      return;
+    }
     
-    // Update local state
-    setTasks(tasks.map(t => t._id === taskId ? { ...t, status: 'RESOLVED' } : t));
+    // Update local state with resolved status and afterImage proof
+    setTasks(tasks.map(t => t._id === taskId ? { ...t, status: 'RESOLVED', afterImageUrl: afterImage } : t));
     setSelectedTask(null);
     setAfterImage(null);
     
     // Update global mock storage
     const demoComplaints = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
-    const updated = demoComplaints.map((c: any) => c._id === taskId ? { ...c, status: 'RESOLVED' } : c);
+    const updated = demoComplaints.map((c: any) => c._id === taskId ? { ...c, status: 'RESOLVED', afterImageUrl: afterImage } : c);
     localStorage.setItem("mockComplaints", JSON.stringify(updated));
-    
-    
+    alert("Task verified and marked as RESOLVED with photographic evidence!");
   };
 
   // Generate Polyline for Optimized Route (Officer -> Task 1 -> Task 2 -> Task 3)
@@ -192,19 +182,19 @@ export default function OfficerDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         
-        {/* namic Route Optimizer Section */}
+        {/* Dynamic Route Optimizer Section */}
         <div className="mb-8 bg-white rounded shadow border border-gray-300 overflow-hidden">
           <div className="p-5 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center bg-gray-50">
             <div>
-              <h2 className="text-xl font-bold text-blue-900">namic Route Optimizer</h2>
-              <p className="text-gray-600 text-sm mt-1">AI-generated optimal path for active inspections.</p>
+              <h2 className="text-xl font-bold text-blue-900">Dynamic GPS Route Optimizer</h2>
+              <p className="text-gray-600 text-sm mt-1">AI-generated optimal shortest path connecting all active inspections.</p>
             </div>
             <button 
               onClick={() => setIsRoutingStarted(!isRoutingStarted)}
               className={`mt-4 sm:mt-0 px-6 py-2 rounded font-bold uppercase tracking-wide text-xs flex items-center transition-colors shadow-sm ${isRoutingStarted ? 'bg-green-600 hover:bg-green-700 text-white border border-green-700' : 'bg-orange-600 hover:bg-orange-700 text-white border border-orange-700'}`}
             >
               <Navigation size={16} className="mr-2" /> 
-              {isRoutingStarted ? "Tracking Active" : "Start Inspection Route"}
+              {isRoutingStarted ? "Optimal Route Active" : "Start Inspection Route"}
             </button>
           </div>
           
@@ -370,21 +360,12 @@ export default function OfficerDashboard() {
                 ></textarea>
                 
                 {selectedTask.status !== 'RESOLVED' && selectedTask.status !== 'WITHDRAWN' && selectedTask.status !== 'ARCHIVED' ? (
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-3">
                     <button 
                       onClick={() => handleUpdateRemarks(selectedTask._id)}
-                      className="flex-1 text-xs bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded uppercase tracking-wide transition-colors shadow-sm"
+                      className="w-full text-xs bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded uppercase tracking-wide transition-colors shadow-sm"
                     >
-                      Save Updates
-                    </button>
-                    <button 
-                      onClick={() => {
-                        handleUpdateRemarks(selectedTask._id);
-                        handleResolveTaskWithoutImage(selectedTask._id);
-                      }}
-                      className="flex-1 text-xs bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg uppercase tracking-wider transition-colors shadow-sm flex justify-center items-center"
-                    >
-                      <CheckCircle2 size={14} className="mr-1.5" /> Mark Completed
+                      Save Progress Remarks
                     </button>
                   </div>
                 ) : selectedTask.status === 'WITHDRAWN' ? (
