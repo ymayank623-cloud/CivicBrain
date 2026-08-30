@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { motion } from 'framer-motion';
 import { 
   Navigation, CheckCircle2, Clock, 
-  Camera, X, MapPin
+  Camera, X, MapPin, History, CheckCheck
 } from 'lucide-react';
 
 // Fix Leaflet Default Icon issue in React/Vite
@@ -50,49 +50,47 @@ function MapBoundsViewer({ bounds }: { bounds: [number, number][] }) {
 }
 
 export default function OfficerDashboard() {
-  
-  
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isHistoryTab = searchParams.get('tab') === 'history';
+
   const [tasks, setTasks] = useState<any[]>([]);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [isRoutingStarted, setIsRoutingStarted] = useState(false);
   const [afterImage, setAfterImage] = useState<string | null>(null);
-  const [showPrevious, setShowPrevious] = useState(false);
-  
-  // Custom Toast Animation State
-  
-  
-  
-  
+
   // Default to Lucknow, but it will update based on tasks
   const [officerLocation, setOfficerLocation] = useState<[number, number]>([26.8400, 80.9400]);
 
-  useEffect(() => {
-    const loadTasks = () => {
-      // Load mock complaints from localStorage
-      const demoComplaints = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
-      const mappedTasks = demoComplaints.map((c: any) => ({
-        _id: c._id,
-        title: c.title,
-        category: c.category,
-        status: c.status || 'ASSIGNED',
-        priority: c.priority || (c.category === 'Open Manhole' ? 'CRITICAL' : c.category === 'Water Leak' ? 'HIGH' : 'MEDIUM'),
-        location: c.location || [26.8467, 80.9462],
-        address: c.location ? `Lat: ${c.location[0].toFixed(3)}, Lng: ${c.location[1].toFixed(3)}` : "Unknown Area",
-        imageUrl: c.imageUrl,
-        impactedCount: c.impactedCount || 1,
-        slaDeadline: new Date(new Date(c.createdAt).getTime() + 12 * 60 * 60 * 1000).toISOString()
-      }));
-      
-      setTasks(mappedTasks);
-      
-      // Automatically shift officer location to the city where the first active task is!
-      const activeTasks = mappedTasks.filter((t: any) => t.status !== 'RESOLVED');
-      if (activeTasks.length > 0) {
-        // Offset slightly from the first task so markers don't overlap completely
-        setOfficerLocation([activeTasks[0].location[0] - 0.005, activeTasks[0].location[1] - 0.005]);
-      }
-    };
+  const loadTasks = () => {
+    // Load mock complaints from localStorage
+    const demoComplaints = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
+    const mappedTasks = demoComplaints.map((c: any) => ({
+      _id: c._id,
+      title: c.title,
+      category: c.category,
+      status: c.status || 'ASSIGNED',
+      priority: c.priority || (c.category === 'Open Manhole' ? 'CRITICAL' : c.category === 'Water Leak' ? 'HIGH' : 'MEDIUM'),
+      location: c.location || [26.8467, 80.9462],
+      address: c.location ? `Lat: ${c.location[0].toFixed(3)}, Lng: ${c.location[1].toFixed(3)}` : "Unknown Area",
+      imageUrl: c.imageUrl,
+      afterImageUrl: c.afterImageUrl,
+      remarks: c.remarks,
+      impactedCount: c.impactedCount || 1,
+      createdAt: c.createdAt || new Date().toISOString(),
+      slaDeadline: new Date(new Date(c.createdAt || Date.now()).getTime() + 12 * 60 * 60 * 1000).toISOString()
+    }));
+    
+    setTasks(mappedTasks);
+    
+    // Automatically shift officer location to the city where the first active task is!
+    const activeTasks = mappedTasks.filter((t: any) => t.status !== 'RESOLVED');
+    if (activeTasks.length > 0) {
+      // Offset slightly from the first task so markers don't overlap completely
+      setOfficerLocation([activeTasks[0].location[0] - 0.005, activeTasks[0].location[1] - 0.005]);
+    }
+  };
 
+  useEffect(() => {
     loadTasks(); // Initial load
 
     // Listen for cross-tab updates (Real-time sync for Hackathon demo)
@@ -105,8 +103,6 @@ export default function OfficerDashboard() {
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
-
-
 
   const handleUploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -141,7 +137,8 @@ export default function OfficerDashboard() {
     }
     
     // Update local state with resolved status and afterImage proof
-    setTasks(tasks.map(t => t._id === taskId ? { ...t, status: 'RESOLVED', afterImageUrl: afterImage } : t));
+    const updatedTasks = tasks.map(t => t._id === taskId ? { ...t, status: 'RESOLVED', afterImageUrl: afterImage } : t);
+    setTasks(updatedTasks);
     setSelectedTask(null);
     setAfterImage(null);
     
@@ -149,12 +146,14 @@ export default function OfficerDashboard() {
     const demoComplaints = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
     const updated = demoComplaints.map((c: any) => c._id === taskId ? { ...c, status: 'RESOLVED', afterImageUrl: afterImage } : c);
     localStorage.setItem("mockComplaints", JSON.stringify(updated));
-    alert("Task verified and marked as RESOLVED with photographic evidence!");
+    
+    alert("Task verified and marked as RESOLVED with photographic evidence! Saved to Ticket History.");
   };
 
   // Generate Polyline for Optimized Route (Officer -> Task 1 -> Task 2 -> Task 3)
   // Only include tasks that are not resolved or withdrawn
   const activeTasksForRoute = tasks.filter(t => t.status !== 'RESOLVED' && t.status !== 'WITHDRAWN');
+  const resolvedTasks = tasks.filter(t => t.status === 'RESOLVED');
   const routePoints: [number, number][] = [officerLocation, ...activeTasksForRoute.map(t => t.location as [number, number])];
 
   return (
@@ -162,142 +161,275 @@ export default function OfficerDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         
-        {/* Dynamic Route Optimizer Section */}
-        <div className="mb-8 bg-white rounded shadow border border-gray-300 overflow-hidden">
-          <div className="p-5 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center bg-gray-50">
-            <div>
-              <h2 className="text-xl font-bold text-blue-900">Dynamic GPS Route Optimizer</h2>
-              <p className="text-gray-600 text-sm mt-1">AI-generated optimal shortest path connecting all active inspections.</p>
-            </div>
+        {/* Top Tab Switcher */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex gap-2">
             <button 
-              onClick={() => setIsRoutingStarted(!isRoutingStarted)}
-              className={`mt-4 sm:mt-0 px-6 py-2 rounded font-bold uppercase tracking-wide text-xs flex items-center transition-colors shadow-sm ${isRoutingStarted ? 'bg-green-600 hover:bg-green-700 text-white border border-green-700' : 'bg-orange-600 hover:bg-orange-700 text-white border border-orange-700'}`}
+              onClick={() => setSearchParams({})}
+              className={`px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center transition-all cursor-pointer ${
+                !isHistoryTab 
+                  ? 'bg-blue-900 text-white shadow-md' 
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
             >
-              <Navigation size={16} className="mr-2" /> 
-              {isRoutingStarted ? "Optimal Route Active" : "Start Inspection Route"}
+              <Navigation size={15} className="mr-2 text-orange-400" />
+              Active Assignments ({activeTasksForRoute.length})
+            </button>
+            <button 
+              onClick={() => setSearchParams({ tab: 'history' })}
+              className={`px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center transition-all cursor-pointer ${
+                isHistoryTab 
+                  ? 'bg-blue-900 text-white shadow-md' 
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
+            >
+              <CheckCheck size={16} className="mr-2 text-green-400" />
+              Ticket History ({resolvedTasks.length})
             </button>
           </div>
           
-          {/* Map Container */}
-          <div className="h-[400px] w-full bg-gray-200 relative z-0 border-t border-gray-300">
-            <MapContainer center={officerLocation} zoom={13} style={{ height: '100%', width: '100%' }}>
-              <MapBoundsViewer bounds={[officerLocation, ...tasks.filter(t => t.status !== 'RESOLVED' && t.status !== 'WITHDRAWN').map(t => t.location as [number, number])]} />
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; OpenStreetMap contributors'
-              />
-              
-              {/* Officer Marker */}
-              <Marker position={officerLocation} icon={officerIcon}>
-                <Popup>Officer Current Location</Popup>
-              </Marker>
-
-              {/* Task Markers */}
-              {tasks.filter(t => t.status !== 'RESOLVED' && t.status !== 'WITHDRAWN').map(task => (
-                <Marker 
-                  key={task._id} 
-                  position={task.location as [number, number]} 
-                  icon={task.priority === 'CRITICAL' ? criticalIcon : defaultTaskIcon}
-                  eventHandlers={{
-                    click: () => setSelectedTask(task),
-                  }}
-                >
-                  <Popup>
-                    <div className="font-bold">{task.title}</div>
-                    <div className="text-xs">{task.address}</div>
-                  </Popup>
-                </Marker>
-              ))}
-
-              {isRoutingStarted && (
-                <Polyline 
-                  positions={routePoints} 
-                  color="#ea580c" 
-                  weight={4}
-                  dashArray="10, 10"
-                />
-              )}
-            </MapContainer>
+          <div className="text-xs font-semibold text-gray-500 flex items-center">
+            <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block mr-1.5 animate-pulse"></span>
+            Officer Duty Mode Active
           </div>
         </div>
 
-        {/* Today's Assignments */}
-        <div>
-          <div className="flex justify-between items-end mb-4 border-b border-gray-300 pb-2">
+        {/* VIEW 1: ACTIVE ASSIGNMENTS & ROUTE OPTIMIZER */}
+        {!isHistoryTab && (
+          <>
+            {/* Dynamic Route Optimizer Section */}
+            <div className="mb-8 bg-white rounded-xl shadow border border-gray-300 overflow-hidden">
+              <div className="p-5 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center bg-gray-50">
+                <div>
+                  <h2 className="text-xl font-bold text-blue-900">Dynamic GPS Route Optimizer</h2>
+                  <p className="text-gray-600 text-sm mt-1">AI-generated optimal shortest path connecting all active inspections.</p>
+                </div>
+                <button 
+                  onClick={() => setIsRoutingStarted(!isRoutingStarted)}
+                  className={`mt-4 sm:mt-0 px-6 py-2.5 rounded-lg font-bold uppercase tracking-wide text-xs flex items-center transition-colors shadow-sm cursor-pointer ${isRoutingStarted ? 'bg-green-600 hover:bg-green-700 text-white border border-green-700' : 'bg-orange-600 hover:bg-orange-700 text-white border border-orange-700'}`}
+                >
+                  <Navigation size={16} className="mr-2" /> 
+                  {isRoutingStarted ? "Optimal Route Active" : "Start Inspection Route"}
+                </button>
+              </div>
+              
+              {/* Map Container */}
+              <div className="h-[400px] w-full bg-gray-200 relative z-0 border-t border-gray-300">
+                <MapContainer center={officerLocation} zoom={13} style={{ height: '100%', width: '100%' }}>
+                  <MapBoundsViewer bounds={[officerLocation, ...tasks.filter(t => t.status !== 'RESOLVED' && t.status !== 'WITHDRAWN').map(t => t.location as [number, number])]} />
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; OpenStreetMap contributors'
+                  />
+                  
+                  {/* Officer Marker */}
+                  <Marker position={officerLocation} icon={officerIcon}>
+                    <Popup>Officer Current Location</Popup>
+                  </Marker>
+
+                  {/* Task Markers */}
+                  {tasks.filter(t => t.status !== 'RESOLVED' && t.status !== 'WITHDRAWN').map(task => (
+                    <Marker 
+                      key={task._id} 
+                      position={task.location as [number, number]} 
+                      icon={task.priority === 'CRITICAL' ? criticalIcon : defaultTaskIcon}
+                      eventHandlers={{
+                        click: () => setSelectedTask(task),
+                      }}
+                    >
+                      <Popup>
+                        <div className="font-bold">{task.title}</div>
+                        <div className="text-xs">{task.address}</div>
+                      </Popup>
+                    </Marker>
+                  ))}
+
+                  {isRoutingStarted && (
+                    <Polyline 
+                      positions={routePoints} 
+                      color="#ea580c" 
+                      weight={4}
+                      dashArray="10, 10"
+                    />
+                  )}
+                </MapContainer>
+              </div>
+            </div>
+
+            {/* Today's Assignments */}
             <div>
-              <h2 className="text-xl font-bold text-blue-900">Assigned Inspections</h2>
-              <p className="text-sm text-gray-600 mt-1">Pending verification for today's shift.</p>
+              <div className="flex justify-between items-end mb-4 border-b border-gray-300 pb-2">
+                <div>
+                  <h2 className="text-xl font-bold text-blue-900">Assigned Inspections</h2>
+                  <p className="text-sm text-gray-600 mt-1">Pending verification for today's shift.</p>
+                </div>
+                <div className="text-sm font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded border border-orange-200">
+                  Total Pending: {activeTasksForRoute.length}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {activeTasksForRoute.length === 0 ? (
+                  <div className="col-span-full py-16 text-center bg-white rounded-xl shadow-sm border border-gray-200">
+                    <CheckCircle2 size={48} className="mx-auto text-green-500 mb-2" />
+                    <h3 className="text-lg font-bold text-gray-900">All Assignments Completed!</h3>
+                    <p className="text-sm text-gray-500 mt-1">Check "Ticket History" to view all resolved grievances and photo proofs.</p>
+                    <button 
+                      onClick={() => setSearchParams({ tab: 'history' })}
+                      className="mt-4 inline-flex items-center px-4 py-2 bg-blue-900 text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-blue-800"
+                    >
+                      <CheckCheck size={14} className="mr-1.5" /> View Ticket History
+                    </button>
+                  </div>
+                ) : (
+                  activeTasksForRoute.map((task) => (
+                    <div 
+                      key={task._id} 
+                      onClick={() => setSelectedTask(task)}
+                      className={`bg-white rounded-xl shadow-sm border p-5 cursor-pointer relative hover:shadow-md transition-all
+                        ${task.status === 'WITHDRAWN' ? 'border-gray-300 opacity-60 grayscale' : 'border-gray-200'}
+                        ${task.priority === 'CRITICAL' ? 'border-l-4 border-l-red-600' : 'border-l-4 border-l-blue-900'}`}
+                    >
+                      {task.priority === 'CRITICAL' && (
+                        <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-bl">
+                          Urgent
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between items-start mb-3">
+                        <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded border
+                          ${task.status === 'ASSIGNED' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' : 
+                            task.status === 'IN_PROGRESS' ? 'bg-blue-50 text-blue-800 border-blue-200' : 
+                            task.status === 'WITHDRAWN' ? 'bg-gray-100 text-gray-700 border-gray-300' :
+                            'bg-gray-100 text-gray-600 border-gray-200'}`}
+                        >
+                          {task.status}
+                        </span>
+                        <span className="text-xs font-bold text-gray-400">ID: {task._id}</span>
+                      </div>
+                      
+                      <h3 className={`font-bold text-gray-900 text-lg mb-2 leading-tight ${task.status === 'WITHDRAWN' ? 'line-through text-gray-500' : ''}`}>
+                        {task.title}
+                      </h3>
+                      
+                      <p className="text-sm text-gray-600 flex items-center mb-3 font-medium">
+                        <MapPin size={14} className="mr-1.5 text-blue-800 flex-shrink-0" /> {task.address}
+                      </p>
+
+                      {task.status === 'WITHDRAWN' && (
+                        <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-600 italic">
+                          <strong>Citizen Reason:</strong> {task.withdrawReason || 'No reason provided'}
+                        </div>
+                      )}
+
+                      {task.status !== 'WITHDRAWN' && (
+                        <div className="mt-4 pt-3 border-t border-gray-100">
+                          <div className="flex items-center justify-between text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2">
+                            <span className="flex items-center"><Clock size={12} className="mr-1 text-red-500" /> Due: {new Date(task.slaDeadline).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            <span className="text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">Click to Resolve</span>
+                          </div>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
+                            className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-2.5 px-4 rounded text-xs uppercase tracking-wider flex items-center justify-center shadow transition-colors cursor-pointer"
+                          >
+                            <Camera size={14} className="mr-2 text-orange-400" /> Open &amp; Upload Resolution Proof
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-            <div className="text-sm font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded border border-orange-200">
-              Total Pending: {tasks.filter(t => t.status !== 'RESOLVED' && t.status !== 'ARCHIVED').length}
+          </>
+        )}
+
+        {/* VIEW 2: TICKET HISTORY & RESOLVED ARCHIVE */}
+        {isHistoryTab && (
+          <div>
+            <div className="flex justify-between items-end mb-6 border-b border-gray-300 pb-3">
+              <div>
+                <h2 className="text-2xl font-bold text-blue-900 flex items-center">
+                  <CheckCheck className="mr-2.5 text-green-600" size={26} /> Official Ticket History &amp; Resolution Records
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">Verified records of all resolved civic grievances with before/after photographic proof.</p>
+              </div>
+              <div className="text-sm font-bold text-green-700 bg-green-50 px-3.5 py-1.5 rounded-lg border border-green-200">
+                Total Resolved: {resolvedTasks.length}
+              </div>
             </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tasks.filter(t => t.status !== 'RESOLVED' && t.status !== 'ARCHIVED').length === 0 ? (
-              <div className="col-span-full py-12 text-center text-gray-500 font-medium bg-white rounded shadow-sm border border-gray-200">
-                You have no active assignments for today! Great job.
+
+            {resolvedTasks.length === 0 ? (
+              <div className="py-20 text-center bg-white rounded-xl shadow-sm border border-gray-200">
+                <History size={48} className="mx-auto text-gray-400 mb-3" />
+                <h3 className="text-lg font-bold text-gray-800">No Resolved Tickets Yet</h3>
+                <p className="text-sm text-gray-500 max-w-md mx-auto mt-1">
+                  Once you inspect an active complaint and upload the 'After Resolution' photo proof, the completed record will be permanently saved here.
+                </p>
+                <button 
+                  onClick={() => setSearchParams({})}
+                  className="mt-4 inline-flex items-center px-4 py-2 bg-blue-900 text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-blue-800"
+                >
+                  <Navigation size={14} className="mr-1.5" /> Go to Active Assignments
+                </button>
               </div>
             ) : (
-              tasks.filter(t => t.status !== 'RESOLVED' && t.status !== 'ARCHIVED').map((task) => (
-                <div 
-                  key={task._id} 
-                  onClick={() => setSelectedTask(task)}
-                  className={`bg-white rounded shadow-sm border p-5 cursor-pointer relative hover:shadow transition-shadow
-                    ${task.status === 'WITHDRAWN' ? 'border-gray-300 opacity-60 grayscale' : 'border-gray-200'}
-                    ${task.priority === 'CRITICAL' ? 'border-l-4 border-l-red-600' : 'border-l-4 border-l-blue-900'}`}
-                >
-                  {task.priority === 'CRITICAL' && (
-                    <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-bl">
-                      Urgent
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {resolvedTasks.map((task) => (
+                  <div 
+                    key={task._id}
+                    onClick={() => setSelectedTask(task)}
+                    className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all cursor-pointer border-l-4 border-l-green-600"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-green-100 text-green-800 border border-green-300 flex items-center">
+                        <CheckCircle2 size={12} className="mr-1" /> RESOLVED &amp; VERIFIED
+                      </span>
+                      <span className="text-xs font-bold text-gray-400">ID: {task._id}</span>
                     </div>
-                  )}
-                  
-                  <div className="flex justify-between items-start mb-3">
-                    <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded border
-                      ${task.status === 'ASSIGNED' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' : 
-                        task.status === 'IN_PROGRESS' ? 'bg-blue-50 text-blue-800 border-blue-200' : 
-                        task.status === 'WITHDRAWN' ? 'bg-gray-100 text-gray-700 border-gray-300' :
-                        'bg-gray-100 text-gray-600 border-gray-200'}`}
-                    >
-                      {task.status}
-                    </span>
-                    <span className="text-xs font-bold text-gray-400">ID: {task._id}</span>
-                  </div>
-                  
-                  <h3 className={`font-bold text-gray-900 text-lg mb-2 leading-tight ${task.status === 'WITHDRAWN' ? 'line-through text-gray-500' : ''}`}>
-                    {task.title}
-                  </h3>
-                  
-                  <p className="text-sm text-gray-600 flex items-center mb-3 font-medium">
-                    <MapPin size={14} className="mr-1.5" /> {task.address}
-                  </p>
 
-                  {task.status === 'WITHDRAWN' && (
-                    <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-600 italic">
-                      <strong>Citizen Reason:</strong> {task.withdrawReason || 'No reason provided'}
-                    </div>
-                  )}
+                    <h3 className="font-extrabold text-gray-900 text-lg mb-1 leading-tight">{task.title}</h3>
+                    <p className="text-xs text-gray-600 flex items-center mb-3 font-medium">
+                      <MapPin size={13} className="mr-1 text-blue-800 flex-shrink-0" /> {task.address}
+                    </p>
 
-                  {task.status !== 'WITHDRAWN' && (
-                    <div className="mt-4 pt-3 border-t border-gray-100">
-                      <div className="flex items-center justify-between text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2">
-                        <span className="flex items-center"><Clock size={12} className="mr-1 text-red-500" /> Due: {new Date(task.slaDeadline).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                        <span className="text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">Click to Resolve</span>
+                    {/* Photos Preview Comparison */}
+                    <div className="grid grid-cols-2 gap-2 my-3">
+                      <div className="bg-gray-50 rounded-lg p-2 border border-gray-200 text-center">
+                        <span className="text-[9px] font-bold uppercase text-gray-500 block mb-1">Citizen Photo</span>
+                        {task.imageUrl ? (
+                          <img src={task.imageUrl} alt="Citizen evidence" className="w-full h-24 object-cover rounded" />
+                        ) : (
+                          <div className="h-24 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 rounded">No Photo</div>
+                        )}
                       </div>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
-                        className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-2.5 px-4 rounded text-xs uppercase tracking-wider flex items-center justify-center shadow transition-colors cursor-pointer"
-                      >
-                        <Camera size={14} className="mr-2 text-orange-400" /> Open &amp; Upload Resolution Proof
-                      </button>
+                      <div className="bg-green-50/50 rounded-lg p-2 border border-green-200 text-center">
+                        <span className="text-[9px] font-bold uppercase text-green-800 block mb-1">After Repair Proof</span>
+                        {task.afterImageUrl ? (
+                          <img src={task.afterImageUrl} alt="After repair proof" className="w-full h-24 object-cover rounded border border-green-400" />
+                        ) : (
+                          <div className="h-24 bg-green-100 flex items-center justify-center text-[10px] text-green-700 rounded font-bold">Verified</div>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))
+
+                    {task.remarks && (
+                      <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-xs text-gray-700 mb-3">
+                        <strong className="text-gray-900">Officer Remarks:</strong> {task.remarks}
+                      </div>
+                    )}
+
+                    <div className="pt-3 border-t border-gray-100 flex justify-between items-center text-[11px] text-gray-500 font-medium">
+                      <span>Category: <strong className="text-gray-800">{task.category}</strong></span>
+                      <span className="text-blue-900 font-bold hover:underline">View Full Details &rarr;</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
-        </div>
+        )}
+
       </div>
 
       {/* Task Action Modal */}
@@ -438,62 +570,6 @@ export default function OfficerDashboard() {
 
             </div>
           </div>
-        </div>
-      )}
-
-      {/* History Modal */}
-      {showPrevious && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded w-full max-w-4xl overflow-hidden shadow-2xl relative flex flex-col max-h-[85vh] border border-gray-300"
-          >
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50 sticky top-0 z-10">
-              <div>
-                <h2 className="text-xl font-bold text-blue-900">Official Records (History)</h2>
-                <p className="text-sm text-gray-600 mt-1">Previous and completed assignments.</p>
-              </div>
-              <button 
-                onClick={() => setShowPrevious(false)}
-                className="p-2 bg-white border border-gray-300 text-gray-500 hover:text-gray-900 rounded transition-colors shadow-sm"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            
-            <div className="p-6 overflow-y-auto flex-1 bg-white">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {tasks.filter(t => t.status === 'RESOLVED' || t.status === 'ARCHIVED').length === 0 ? (
-                  <div className="col-span-full py-12 text-center text-gray-500 font-medium">
-                    No previous assignments found in the system.
-                  </div>
-                ) : (
-                  tasks.filter(t => t.status === 'RESOLVED' || t.status === 'ARCHIVED').map((task) => (
-                    <div 
-                      key={task._id} 
-                      onClick={() => {
-                        setShowPrevious(false);
-                        setSelectedTask(task);
-                      }}
-                      className="bg-gray-50 rounded border border-gray-200 p-5 shadow-sm hover:border-gray-400 hover:shadow transition-all cursor-pointer relative"
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded border bg-white text-gray-700 border-gray-300">
-                          {task.status}
-                        </span>
-                        <span className="text-xs font-bold text-gray-400">ID: {task._id}</span>
-                      </div>
-                      <h3 className="font-bold text-gray-900 text-lg mb-2 leading-tight">{task.title}</h3>
-                      <p className="text-sm text-gray-600 flex items-center font-medium">
-                        <MapPin size={14} className="mr-1.5 text-blue-800" /> {task.address}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </motion.div>
         </div>
       )}
     </div>

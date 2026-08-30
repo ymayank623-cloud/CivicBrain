@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Phone, LogOut, Menu, X, Award, User, Sun, Moon } from "lucide-react";
 import { useLang } from "../context/LangContext";
@@ -111,14 +111,14 @@ export default function GovNavbar() {
               <>
                 <NavLink to="/register" label={t("New Registration", "नया पंजीकरण")} active={isActive("/register")} />
                 <Link to="/login" className="ml-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold uppercase tracking-wide px-4 py-1.5 rounded transition-colors">
-                  {t("Login ", "लॉगिन ")}
+                  {t("Login", "लॉगिन")}
                 </Link>
               </>
             )}
 
             {user?.role === "CITIZEN" && (
               <>
-                <NavLink to="/citizen/new-complaint" label="� File Complaint" active={isActive("/citizen/new-complaint")} />
+                <NavLink to="/citizen/new-complaint" label="➕ File Complaint" active={isActive("/citizen/new-complaint")} />
                 <NavLink to="/citizen/dashboard" label="📋 My Tickets" active={isActive("/citizen/dashboard")} />
                 <div className="flex items-center bg-blue-900 border border-blue-700 px-3 py-1 rounded text-xs font-bold text-orange-300 ml-1">
                   <Award size={12} className="mr-1" /> {user.karmaPoints || 40} pts
@@ -129,7 +129,8 @@ export default function GovNavbar() {
             )}
             {user?.role === "FIELD_OFFICER" && (
               <>
-                <NavLink to="/officer/dashboard" label="📋 Assignments" active={isActive("/officer/dashboard")} />
+                <NavLink to="/officer/dashboard" label="📋 Assignments" active={location.pathname === "/officer/dashboard" && !location.search.includes("tab=history")} />
+                <NavLink to="/officer/dashboard?tab=history" label="📜 Ticket History" active={location.search.includes("tab=history")} />
                 <Link to="/profile" className="ml-3 text-blue-200 hover:text-white transition-colors" title="My Profile"><User size={16} /></Link>
                 <button onClick={handleLogout} className="ml-3 text-blue-200 hover:text-red-400 transition-colors" title="Logout"><LogOut size={16} /></button>
               </>
@@ -143,7 +144,7 @@ export default function GovNavbar() {
             )}
             {user?.role === "COMMISSIONER" && (
               <>
-                <NavLink to="/admin/dashboard" label="� War Room" active={isActive("/admin/dashboard")} />
+                <NavLink to="/admin/dashboard" label="🏛️ War Room" active={isActive("/admin/dashboard")} />
                 <Link to="/profile" className="ml-3 text-blue-200 hover:text-white transition-colors" title="My Profile"><User size={16} /></Link>
                 <button onClick={handleLogout} className="ml-3 text-blue-200 hover:text-red-400 transition-colors" title="Logout"><LogOut size={16} /></button>
               </>
@@ -157,6 +158,12 @@ export default function GovNavbar() {
             <Link to="/" className="text-xs font-bold uppercase text-blue-100 hover:text-white" onClick={() => setMobileOpen(false)}>Home</Link>
             <Link to="/track" className="text-xs font-bold uppercase text-blue-100 hover:text-white" onClick={() => setMobileOpen(false)}>Track Grievance</Link>
             <Link to="/help-faq" className="text-xs font-bold uppercase text-blue-100 hover:text-white" onClick={() => setMobileOpen(false)}>Help & FAQ</Link>
+            {user?.role === "FIELD_OFFICER" && (
+              <>
+                <Link to="/officer/dashboard" className="text-xs font-bold uppercase text-blue-100 hover:text-white" onClick={() => setMobileOpen(false)}>📋 Assignments</Link>
+                <Link to="/officer/dashboard?tab=history" className="text-xs font-bold uppercase text-orange-300 hover:text-white" onClick={() => setMobileOpen(false)}>📜 Ticket History</Link>
+              </>
+            )}
             {!user && <Link to="/login" className="text-xs font-bold uppercase text-orange-300 hover:text-white" onClick={() => setMobileOpen(false)}>Login / Register</Link>}
             {user && <button onClick={() => { handleLogout(); setMobileOpen(false); }} className="text-left text-xs font-bold uppercase text-red-300 hover:text-white">Logout</button>}
           </div>
