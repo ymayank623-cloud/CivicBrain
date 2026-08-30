@@ -6,6 +6,41 @@ import {
   Camera
 } from "lucide-react";
 
+function compressImage(file: File, maxWidth = 800, quality = 0.7): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(e.target?.result as string);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve(compressedDataUrl);
+      };
+      img.onerror = () => resolve(e.target?.result as string);
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => resolve("");
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function CitizenDashboard() {
   const [user, setUser] = useState<any>(null);
   const [complaints, setComplaints] = useState<any[]>([]);
@@ -14,6 +49,7 @@ export default function CitizenDashboard() {
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [isEditingTicket, setIsEditingTicket] = useState(false);
   const [editForm, setEditForm] = useState({ title: "", description: "", imageUrl: "" });
+  const [isSaving, setIsSaving] = useState(false);
 
   // Search Officials State
   const [pincode, setPincode] = useState("");
@@ -329,14 +365,19 @@ export default function CitizenDashboard() {
                         type="file" 
                         accept="image/*" 
                         className="hidden"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setEditForm({ ...editForm, imageUrl: reader.result as string });
-                            };
-                            reader.readAsDataURL(file);
+                            try {
+                              const compressed = await compressImage(file);
+                              setEditForm(prev => ({ ...prev, imageUrl: compressed }));
+                            } catch (err) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setEditForm(prev => ({ ...prev, imageUrl: reader.result as string }));
+                              };
+                              reader.readAsDataURL(file);
+                            }
                           }
                         }}
                       />
@@ -346,38 +387,68 @@ export default function CitizenDashboard() {
 
                 <div className="flex flex-col gap-3 pt-2">
                   <div className="flex gap-3">
-                    <button onClick={() => setIsEditingTicket(false)} className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gray-200 transition-colors">Cancel</button>
-                    <button onClick={() => {
-                      const all = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
-                      const updated = all.map((t:any) => t._id === selectedTicket._id ? {
-                        ...t, 
-                        title: editForm.title, 
-                        description: editForm.description,
-                        imageUrl: editForm.imageUrl || undefined
-                      } : t);
-                      localStorage.setItem("mockComplaints", JSON.stringify(updated));
-                      setComplaints(updated);
-                      setSelectedTicket({
-                        ...selectedTicket, 
-                        title: editForm.title, 
-                        description: editForm.description,
-                        imageUrl: editForm.imageUrl || undefined
-                      });
-                      setIsEditingTicket(false);
-                    }} className="flex-1 bg-[#111827] text-white py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors shadow-lg">Save Changes</button>
+                    <button onClick={() => setIsEditingTicket(false)} className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gray-200 transition-colors cursor-pointer">Cancel</button>
+                    <button 
+                      disabled={isSaving}
+                      onClick={() => {
+                        setIsSaving(true);
+                        try {
+                          const all = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
+                          const targetId = selectedTicket._id || selectedTicket.id;
+                          
+                          const updated = all.map((t: any) => {
+                            const currentId = t._id || t.id;
+                            if (currentId === targetId) {
+                              return {
+                                ...t, 
+                                title: editForm.title, 
+                                description: editForm.description,
+                                imageUrl: editForm.imageUrl || undefined
+                              };
+                            }
+                            return t;
+                          });
+
+                          try {
+                            localStorage.setItem("mockComplaints", JSON.stringify(updated));
+                          } catch (storageErr) {
+                            console.warn("Storage quota limit reached, saving with image trim", storageErr);
+                            // Fallback: trim image if quota error occurs
+                            localStorage.setItem("mockComplaints", JSON.stringify(updated.map((t: any) => (t._id === targetId || t.id === targetId) ? { ...t, imageUrl: undefined } : t)));
+                          }
+
+                          setComplaints(updated);
+                          setSelectedTicket({
+                            ...selectedTicket, 
+                            title: editForm.title, 
+                            description: editForm.description,
+                            imageUrl: editForm.imageUrl || undefined
+                          });
+                          setIsEditingTicket(false);
+                        } catch (err) {
+                          console.error("Save edit error:", err);
+                          setIsEditingTicket(false);
+                        } finally {
+                          setIsSaving(false);
+                        }
+                      }} 
+                      className="flex-1 bg-[#111827] text-white py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors shadow-lg cursor-pointer"
+                    >
+                      {isSaving ? "Saving..." : "Save Changes"}
+                    </button>
                   </div>
                   
                   <button onClick={() => {
                     if(window.confirm("Are you sure you want to permanently delete this grievance?")) {
                       const all = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
-                      // Instead of completely removing it, we mark it as DELETED so officers can see it was withdrawn
-                      const updated = all.map((t:any) => t._id === selectedTicket._id ? {...t, status: "DELETED BY CITIZEN"} : t);
+                      const targetId = selectedTicket._id || selectedTicket.id;
+                      const updated = all.map((t: any) => (t._id === targetId || t.id === targetId) ? {...t, status: "DELETED BY CITIZEN"} : t);
                       localStorage.setItem("mockComplaints", JSON.stringify(updated));
                       setComplaints(updated);
                       setSelectedTicket(null);
                       setIsEditingTicket(false);
                     }
-                  }} className="w-full bg-red-50 text-red-600 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-100 transition-colors border border-red-200 mt-2">
+                  }} className="w-full bg-red-50 text-red-600 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-100 transition-colors border border-red-200 mt-2 cursor-pointer">
                     Delete Complaint Permanently
                   </button>
                 </div>
