@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   FileText, PlusCircle, AlertTriangle, Bell, MapPin, 
-  CreditCard, Droplets, Baby, Briefcase, ChevronRight, Search, Phone, X
+  CreditCard, Droplets, Baby, Briefcase, ChevronRight, Search, Phone, X,
+  Camera, Upload
 } from "lucide-react";
 
 export default function CitizenDashboard() {
@@ -12,7 +13,7 @@ export default function CitizenDashboard() {
   const navigate = useNavigate();
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [isEditingTicket, setIsEditingTicket] = useState(false);
-  const [editForm, setEditForm] = useState({ title: "", description: "" });
+  const [editForm, setEditForm] = useState({ title: "", description: "", imageUrl: "" });
 
   // Search Officials State
   const [pincode, setPincode] = useState("");
@@ -299,17 +300,69 @@ export default function CitizenDashboard() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Description</label>
-                  <textarea rows={4} value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-600 outline-none text-sm font-medium bg-gray-50 focus:bg-white resize-none"></textarea>
+                  <textarea rows={3} value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-600 outline-none text-sm font-medium bg-gray-50 focus:bg-white resize-none"></textarea>
                 </div>
+                
+                {/* Add / Update Evidence Photo */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
+                    Evidence Photo (Before)
+                  </label>
+                  {editForm.imageUrl ? (
+                    <div className="relative rounded-xl overflow-hidden border border-gray-300 h-36 bg-gray-100 flex items-center justify-center">
+                      <img src={editForm.imageUrl} alt="Grievance evidence" className="w-full h-full object-cover" />
+                      <button 
+                        type="button"
+                        onClick={() => setEditForm({ ...editForm, imageUrl: "" })}
+                        className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-full shadow transition-colors"
+                        title="Remove photo"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="border-2 border-dashed border-gray-300 hover:border-blue-500 rounded-xl p-4 flex flex-col items-center justify-center bg-gray-50 hover:bg-blue-50/40 transition-colors cursor-pointer">
+                      <Camera size={22} className="text-gray-400 mb-1" />
+                      <span className="text-xs font-bold text-gray-700">Click to Upload / Add Photo</span>
+                      <span className="text-[10px] text-gray-500">PNG, JPG, WebP up to 10MB</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setEditForm({ ...editForm, imageUrl: reader.result as string });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+
                 <div className="flex flex-col gap-3 pt-2">
                   <div className="flex gap-3">
                     <button onClick={() => setIsEditingTicket(false)} className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gray-200 transition-colors">Cancel</button>
                     <button onClick={() => {
                       const all = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
-                      const updated = all.map((t:any) => t._id === selectedTicket._id ? {...t, title: editForm.title, description: editForm.description} : t);
+                      const updated = all.map((t:any) => t._id === selectedTicket._id ? {
+                        ...t, 
+                        title: editForm.title, 
+                        description: editForm.description,
+                        imageUrl: editForm.imageUrl || undefined
+                      } : t);
                       localStorage.setItem("mockComplaints", JSON.stringify(updated));
                       setComplaints(updated);
-                      setSelectedTicket({...selectedTicket, title: editForm.title, description: editForm.description});
+                      setSelectedTicket({
+                        ...selectedTicket, 
+                        title: editForm.title, 
+                        description: editForm.description,
+                        imageUrl: editForm.imageUrl || undefined
+                      });
                       setIsEditingTicket(false);
                     }} className="flex-1 bg-[#111827] text-white py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors shadow-lg">Save Changes</button>
                   </div>
@@ -381,7 +434,7 @@ export default function CitizenDashboard() {
                 )}
                 
                 <div className="flex gap-3">
-                  <button onClick={() => { setEditForm({ title: selectedTicket.title, description: selectedTicket.description || "" }); setIsEditingTicket(true); }} className="flex-1 bg-white text-[#111827] py-3 rounded-xl text-xs font-bold uppercase tracking-wider border-2 border-gray-200 hover:border-gray-800 transition-colors">
+                  <button onClick={() => { setEditForm({ title: selectedTicket.title, description: selectedTicket.description || "", imageUrl: selectedTicket.imageUrl || "" }); setIsEditingTicket(true); }} className="flex-1 bg-white text-[#111827] py-3 rounded-xl text-xs font-bold uppercase tracking-wider border-2 border-gray-200 hover:border-gray-800 transition-colors">
                     Edit Grievance
                   </button>
                   <button onClick={() => { navigate(`/track?id=${selectedTicket._id}`); }} className="flex-1 bg-[#E05344] text-white py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-600 shadow-lg transition-transform hover:-translate-y-0.5">
