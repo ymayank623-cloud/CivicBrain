@@ -134,15 +134,6 @@ export default function OfficerDashboard() {
     alert("Progress updates saved successfully.");
   };
 
-  const handleArchiveTask = (taskId: string) => {
-    setTasks(tasks.map(t => t._id === taskId ? { ...t, status: 'ARCHIVED' } : t));
-    setSelectedTask(null);
-    
-    const demoComplaints = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
-    const updated = demoComplaints.map((c: any) => c._id === taskId ? { ...c, status: 'ARCHIVED' } : c);
-    localStorage.setItem("mockComplaints", JSON.stringify(updated));
-  };
-
   const handleResolveTask = (taskId: string) => {
     if (!afterImage) {
       alert("Mandatory Verification Error: You must upload an 'After Resolution' photo proof before closing this ticket.");
