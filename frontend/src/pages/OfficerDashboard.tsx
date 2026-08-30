@@ -311,139 +311,140 @@ export default function OfficerDashboard() {
 
       {/* Task Action Modal */}
       {selectedTask && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg w-full max-w-xl max-h-[90vh] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200 border border-gray-300 flex flex-col">
-            <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 sticky top-0 z-20">
-              <div>
-                <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wide">Issue ID: {selectedTask._id}</span>
-                <h3 className="text-lg font-bold text-blue-900 leading-tight">{selectedTask.title}</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white rounded-xl w-full max-w-4xl max-h-[92vh] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200 border border-gray-300 flex flex-col">
+            
+            {/* Header */}
+            <div className="p-4 px-6 border-b border-gray-200 flex justify-between items-center bg-gray-50 sticky top-0 z-20">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded border border-orange-200 uppercase tracking-wide">
+                  ID: {selectedTask._id}
+                </span>
+                <span className={`text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded border
+                  ${selectedTask.status === 'RESOLVED' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-yellow-100 text-yellow-800 border-yellow-300'}`}
+                >
+                  Status: {selectedTask.status}
+                </span>
               </div>
               <button 
                 onClick={() => { setSelectedTask(null); setAfterImage(null); }}
-                className="bg-white text-gray-500 hover:text-gray-900 p-2 rounded-md transition-colors border border-gray-200 shadow-sm"
+                className="bg-white text-gray-500 hover:text-gray-900 p-2 rounded-lg transition-colors border border-gray-200 shadow-sm"
               >
                 <X size={18} />
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto">
-              <p className="text-gray-600 flex items-center mb-4 text-sm font-medium">
-                <MapPin size={16} className="mr-2 text-blue-800" /> {selectedTask.address}
-              </p>
-
-              {selectedTask.imageUrl && (
-                <div className="mb-5 rounded overflow-hidden border border-gray-300 shadow-sm">
-                  <div className="bg-gray-100 text-[10px] font-bold text-gray-600 uppercase tracking-wide px-3 py-1.5 border-b border-gray-200">Citizen Evidence Image</div>
-                  <img src={selectedTask.imageUrl} alt="Citizen Upload" className="w-full max-h-48 object-cover" />
-                </div>
-              )}
+            {/* 2-Column Content Grid */}
+            <div className="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-6">
               
-              <div className="bg-blue-50 rounded p-4 mb-6 border border-blue-100">
-                <h4 className="text-[10px] font-bold text-blue-900 uppercase tracking-wide mb-2 border-b border-blue-200 pb-1">Ticket Details</h4>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div><span className="text-blue-800 block text-[10px] uppercase font-bold mb-0.5">Category</span><span className="font-semibold text-gray-900">{selectedTask.category}</span></div>
-                  <div><span className="text-blue-800 block text-[10px] uppercase font-bold mb-0.5">Priority</span><span className="font-bold text-red-600">{selectedTask.priority}</span></div>`n                    <div><span className="text-blue-800 block text-[10px] uppercase font-bold mb-0.5">Impacted Citizens</span><span className="font-bold text-orange-600">{selectedTask.impactedCount} Complaints</span></div>
-                  <div className="col-span-2"><span className="text-blue-800 block text-[10px] uppercase font-bold mb-0.5">SLA Deadline</span><span className="font-semibold text-gray-900">{new Date(selectedTask.slaDeadline).toLocaleString()}</span></div>
+              {/* Left Column: Complaint Information */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-extrabold text-blue-900 leading-tight mb-1">{selectedTask.title}</h3>
+                  <p className="text-gray-600 flex items-center text-xs font-medium">
+                    <MapPin size={14} className="mr-1.5 text-blue-800 flex-shrink-0" /> {selectedTask.address}
+                  </p>
                 </div>
-              </div>
 
-              {/* ALWAYS VISIBLE EDIT REMARKS SECTION */}
-              <div className="mb-6">
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Officer Remarks / Edit Progress</label>
-                <textarea 
-                  className={`w-full border rounded p-3 text-sm focus:outline-none ${selectedTask.status === 'RESOLVED' || selectedTask.status === 'WITHDRAWN' || selectedTask.status === 'ARCHIVED' ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed' : 'border-gray-300 focus:ring-2 focus:ring-blue-900 focus:border-blue-900'}`}
-                  rows={2}
-                  placeholder="e.g., Pothole filled with gravel, waiting for tar to dry..."
-                  defaultValue={selectedTask.remarks || ""}
-                  id="officer-remarks"
-                  disabled={selectedTask.status === 'RESOLVED' || selectedTask.status === 'WITHDRAWN' || selectedTask.status === 'ARCHIVED'}
-                ></textarea>
-                
-                {selectedTask.status !== 'RESOLVED' && selectedTask.status !== 'WITHDRAWN' && selectedTask.status !== 'ARCHIVED' ? (
-                  <div className="mt-3">
-                    <button 
-                      onClick={() => handleUpdateRemarks(selectedTask._id)}
-                      className="w-full text-xs bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded uppercase tracking-wide transition-colors shadow-sm"
-                    >
-                      Save Progress Remarks
-                    </button>
-                  </div>
-                ) : selectedTask.status === 'WITHDRAWN' ? (
-                  <div className="mt-3">
-                    <div className="text-xs font-bold text-gray-600 uppercase tracking-widest flex items-center bg-gray-100 p-3 rounded-lg border border-gray-200 mb-2">
-                      <X size={16} className="mr-2" /> Ticket withdrawn by citizen.
-                    </div>
-                    <button 
-                      onClick={() => handleArchiveTask(selectedTask._id)}
-                      className="w-full text-xs bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-4 rounded-lg uppercase tracking-wider transition-colors shadow-sm"
-                    >
-                      Acknowledge & Archive
-                    </button>
-                  </div>
-                ) : selectedTask.status === 'ARCHIVED' ? (
-                  <div className="mt-3 text-xs font-bold text-gray-600 uppercase tracking-widest flex items-center bg-gray-100 p-3 rounded-lg border border-gray-200">
-                    <CheckCircle2 size={16} className="mr-2 text-gray-500" /> Acknowledged and Archived.
-                  </div>
-                ) : (
-                  <div className="mt-3 text-xs font-bold text-green-600 uppercase tracking-widest flex items-center bg-green-50 p-3 rounded-lg border border-green-200">
-                    <CheckCircle2 size={16} className="mr-2" /> This issue has been solved and locked.
+                {selectedTask.imageUrl && (
+                  <div className="rounded-lg overflow-hidden border border-gray-300 shadow-sm">
+                    <div className="bg-gray-100 text-[10px] font-bold text-gray-700 uppercase tracking-wide px-3 py-1 border-b border-gray-200">Citizen Evidence Photo</div>
+                    <img src={selectedTask.imageUrl} alt="Citizen Upload" className="w-full max-h-44 object-cover" />
                   </div>
                 )}
-              </div>
-              {/* FINAL RESOLUTION SECTION FOR ALL ACTIVE TASKS */}
-              {selectedTask.status !== 'RESOLVED' && selectedTask.status !== 'WITHDRAWN' && selectedTask.status !== 'ARCHIVED' && (
-                <div className="mt-5 pt-5 border-t border-gray-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-xs font-bold text-blue-900 uppercase tracking-wide flex items-center">
-                      <Camera size={15} className="mr-1.5 text-orange-600" /> Final Resolution &amp; Photographic Proof
-                    </h4>
-                    <span className="text-[10px] font-bold bg-orange-100 text-orange-800 px-2 py-0.5 rounded border border-orange-200 uppercase">
-                      Mandatory Proof
-                    </span>
+
+                <div className="bg-blue-50 rounded-lg p-3.5 border border-blue-200">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div><span className="text-blue-800 block text-[10px] uppercase font-bold">Category</span><span className="font-bold text-gray-900">{selectedTask.category}</span></div>
+                    <div><span className="text-blue-800 block text-[10px] uppercase font-bold">Priority</span><span className="font-bold text-red-600">{selectedTask.priority}</span></div>
+                    <div><span className="text-blue-800 block text-[10px] uppercase font-bold">Impacted</span><span className="font-bold text-orange-600">{selectedTask.impactedCount} Citizens</span></div>
+                    <div><span className="text-blue-800 block text-[10px] uppercase font-bold">SLA Target</span><span className="font-semibold text-gray-800">{new Date(selectedTask.slaDeadline).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></div>
                   </div>
-                  
-                  {/* Image Upload for Resolution */}
-                  <div className="mb-4">
-                    <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wide mb-2">Upload After-Repair Image (Proof)</label>
-                    <div className="border-2 border-dashed border-gray-300 rounded p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer relative bg-gray-50/50">
+                </div>
+              </div>
+
+              {/* Right Column: Resolution Hub & Upload Proof */}
+              <div className="space-y-4 flex flex-col justify-between">
+                
+                {/* Remarks */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Officer Remarks / Progress</label>
+                  <textarea 
+                    className={`w-full border rounded-lg p-2.5 text-xs focus:outline-none ${selectedTask.status === 'RESOLVED' ? 'bg-gray-100 text-gray-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-900'}`}
+                    rows={2}
+                    placeholder="e.g., Repaired pavement, cleaned area..."
+                    defaultValue={selectedTask.remarks || ""}
+                    id="officer-remarks"
+                    disabled={selectedTask.status === 'RESOLVED'}
+                  ></textarea>
+                  {selectedTask.status !== 'RESOLVED' && (
+                    <button 
+                      onClick={() => handleUpdateRemarks(selectedTask._id)}
+                      className="w-full mt-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-1.5 px-3 rounded border border-gray-300 transition-colors"
+                    >
+                      Save Remarks
+                    </button>
+                  )}
+                </div>
+
+                {/* Final Resolution & Photo Upload */}
+                {selectedTask.status !== 'RESOLVED' ? (
+                  <div className="bg-orange-50/60 p-4 rounded-xl border border-orange-200 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-bold text-blue-900 uppercase tracking-wide flex items-center">
+                        <Camera size={15} className="mr-1.5 text-orange-600" /> Final Resolution Proof
+                      </h4>
+                      <span className="text-[9px] font-bold bg-orange-200 text-orange-900 px-2 py-0.5 rounded uppercase">
+                        Mandatory
+                      </span>
+                    </div>
+
+                    <div className="border-2 border-dashed border-orange-300 rounded-lg p-3 text-center bg-white hover:bg-orange-50/50 transition-colors relative cursor-pointer">
                       <input 
                         type="file" 
                         accept="image/*" 
-                        capture="environment"
                         onChange={handleUploadImage}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
                       />
                       {afterImage ? (
                         <div className="relative">
-                          <img src={afterImage} alt="After resolution proof" className="mx-auto max-h-40 rounded object-cover border border-green-500 shadow-sm" />
+                          <img src={afterImage} alt="After proof" className="mx-auto max-h-28 rounded object-cover border border-green-500 shadow-sm" />
                           <button 
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAfterImage(null); }} 
-                            className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-full z-20 shadow"
+                            className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full z-20 shadow"
                           >
-                            <X size={14}/>
+                            <X size={12}/>
                           </button>
-                          <div className="text-[10px] font-bold text-green-700 mt-2 flex items-center justify-center">
-                            <CheckCircle2 size={12} className="mr-1" /> Photo attached! Click below to complete.
+                          <div className="text-[10px] font-bold text-green-700 mt-1 flex items-center justify-center">
+                            <CheckCircle2 size={11} className="mr-1" /> Photo attached! Ready to resolve.
                           </div>
                         </div>
                       ) : (
                         <>
-                          <Camera className="mx-auto h-8 w-8 text-orange-600 mb-2" />
-                          <span className="text-xs text-gray-800 font-bold block">Click to Capture / Upload "After Resolution" Photo</span>
-                          <p className="text-[10px] text-gray-500 mt-1 font-medium">Ticket cannot be resolved without photographic proof.</p>
+                          <Camera className="mx-auto h-7 w-7 text-orange-500 mb-1" />
+                          <span className="text-xs text-gray-800 font-bold block">Upload "After Resolution" Photo</span>
+                          <span className="text-[10px] text-gray-500 block">Click here to choose file / camera</span>
                         </>
                       )}
                     </div>
-                    
+
                     <button 
                       onClick={() => handleResolveTask(selectedTask._id)}
-                      className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded flex items-center justify-center uppercase tracking-wide text-xs transition-colors shadow-md cursor-pointer"
+                      className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg flex items-center justify-center uppercase tracking-wide text-xs transition-colors shadow-md cursor-pointer"
                     >
                       <CheckCircle2 size={16} className="mr-2" /> Verify Proof &amp; Mark as Resolved
                     </button>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="bg-green-50 p-4 rounded-xl border border-green-200 text-center">
+                    <CheckCircle2 size={24} className="mx-auto text-green-600 mb-1" />
+                    <h4 className="font-bold text-green-900 text-sm">Issue Resolved &amp; Verified</h4>
+                    <p className="text-xs text-green-700 mt-0.5">Photographic proof saved in municipal records.</p>
+                  </div>
+                )}
+
+              </div>
+
             </div>
           </div>
         </div>
