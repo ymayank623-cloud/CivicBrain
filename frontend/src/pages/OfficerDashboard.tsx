@@ -7,7 +7,7 @@ import L from 'leaflet';
 import { motion } from 'framer-motion';
 import { 
   Navigation, CheckCircle2, Clock, 
-  Camera, Hammer, X, MapPin
+  Camera, X, MapPin
 } from 'lucide-react';
 
 // Fix Leaflet Default Icon issue in React/Vite
@@ -107,17 +107,6 @@ export default function OfficerDashboard() {
   }, []);
 
 
-
-  const handleStartRepair = (taskId: string) => {
-    // Update local state
-    setTasks(tasks.map(t => t._id === taskId ? { ...t, status: 'IN_PROGRESS' } : t));
-    setSelectedTask({ ...selectedTask, status: 'IN_PROGRESS' });
-    
-    // Update global mock storage
-    const demoComplaints = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
-    const updated = demoComplaints.map((c: any) => c._id === taskId ? { ...c, status: 'IN_PROGRESS' } : c);
-    localStorage.setItem("mockComplaints", JSON.stringify(updated));
-  };
 
   const handleUploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -390,49 +379,56 @@ export default function OfficerDashboard() {
                   </div>
                 )}
               </div>
-              {selectedTask.status === 'ASSIGNED' && selectedTask.status !== 'WITHDRAWN' && selectedTask.status !== 'ARCHIVED' && (
-                <button 
-                  onClick={() => handleStartRepair(selectedTask._id)}
-                  className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded flex items-center justify-center uppercase tracking-wide text-xs transition-colors shadow"
-                >
-                  <Hammer size={16} className="mr-2" /> Start Inspection / Repair
-                </button>
-              )}
-
-              {selectedTask.status === 'IN_PROGRESS' && selectedTask.status !== 'WITHDRAWN' && selectedTask.status !== 'ARCHIVED' && (
+              {/* FINAL RESOLUTION SECTION FOR ALL ACTIVE TASKS */}
+              {selectedTask.status !== 'RESOLVED' && selectedTask.status !== 'WITHDRAWN' && selectedTask.status !== 'ARCHIVED' && (
                 <div className="mt-5 pt-5 border-t border-gray-200">
-                  <h4 className="text-[10px] font-bold text-gray-700 uppercase tracking-wide mb-3">Final Resolution</h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-xs font-bold text-blue-900 uppercase tracking-wide flex items-center">
+                      <Camera size={15} className="mr-1.5 text-orange-600" /> Final Resolution &amp; Photographic Proof
+                    </h4>
+                    <span className="text-[10px] font-bold bg-orange-100 text-orange-800 px-2 py-0.5 rounded border border-orange-200 uppercase">
+                      Mandatory Proof
+                    </span>
+                  </div>
                   
                   {/* Image Upload for Resolution */}
                   <div className="mb-4">
-                    <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wide mb-2">Upload After Image (Proof)</label>
-                    <div className="border-2 border-dashed border-gray-300 rounded p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer relative">
+                    <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wide mb-2">Upload After-Repair Image (Proof)</label>
+                    <div className="border-2 border-dashed border-gray-300 rounded p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer relative bg-gray-50/50">
                       <input 
                         type="file" 
                         accept="image/*" 
                         capture="environment"
                         onChange={handleUploadImage}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
                       />
                       {afterImage ? (
                         <div className="relative">
-                          <img src={afterImage} alt="After resolution" className="mx-auto max-h-32 rounded object-cover" />
-                          <button onClick={(e) => { e.preventDefault(); setAfterImage(null); }} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full z-10"><X size={12}/></button>
+                          <img src={afterImage} alt="After resolution proof" className="mx-auto max-h-40 rounded object-cover border border-green-500 shadow-sm" />
+                          <button 
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAfterImage(null); }} 
+                            className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-full z-20 shadow"
+                          >
+                            <X size={14}/>
+                          </button>
+                          <div className="text-[10px] font-bold text-green-700 mt-2 flex items-center justify-center">
+                            <CheckCircle2 size={12} className="mr-1" /> Photo attached! Click below to complete.
+                          </div>
                         </div>
                       ) : (
                         <>
-                          <Camera className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                          <span className="text-xs text-gray-600 font-bold">Tap to Take Photo</span>
-                          <p className="text-[10px] text-gray-500 mt-2 font-medium">Capture resolution for verification.</p>
+                          <Camera className="mx-auto h-8 w-8 text-orange-600 mb-2" />
+                          <span className="text-xs text-gray-800 font-bold block">Click to Capture / Upload "After Resolution" Photo</span>
+                          <p className="text-[10px] text-gray-500 mt-1 font-medium">Ticket cannot be resolved without photographic proof.</p>
                         </>
                       )}
                     </div>
                     
                     <button 
                       onClick={() => handleResolveTask(selectedTask._id)}
-                      className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded flex items-center justify-center uppercase tracking-wide text-xs transition-colors shadow"
+                      className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded flex items-center justify-center uppercase tracking-wide text-xs transition-colors shadow-md cursor-pointer"
                     >
-                      <CheckCircle2 size={16} className="mr-2" /> Mark as Resolved
+                      <CheckCircle2 size={16} className="mr-2" /> Verify Proof &amp; Mark as Resolved
                     </button>
                   </div>
                 </div>
