@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { verifyRepairPhotos } from '../utils/aiVisionVerifier';
 import type { AIVerificationResult } from '../utils/aiVisionVerifier';
+import { compressImageFile } from '../utils/imageUtils';
 
 // Fix Leaflet Default Icon issue in React/Vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -112,35 +113,31 @@ export default function OfficerDashboard() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const handleUploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const dataUrl = reader.result as string;
-        setAfterImage(dataUrl);
-        setManualOverride(false);
-        setIsAiScanning(true);
-        setAiResult(null);
+      const dataUrl = await compressImageFile(file);
+      setAfterImage(dataUrl);
+      setManualOverride(false);
+      setIsAiScanning(true);
+      setAiResult(null);
 
-        // Run real Computer Vision Scene & Defect Comparison
-        try {
-          const result = await verifyRepairPhotos(selectedTask?.imageUrl, dataUrl, selectedTask?.category);
-          setAiResult(result);
-        } catch (err) {
-          console.error("AI Vision Scanner Error:", err);
-          setAiResult({
-            score: 75,
-            isMatch: true,
-            confidence: 'MEDIUM',
-            reason: 'Photo processed successfully.',
-            detectedFeatures: ['Photo Attached']
-          });
-        } finally {
-          setIsAiScanning(false);
-        }
-      };
-      reader.readAsDataURL(file);
+      // Run real Computer Vision Scene & Defect Comparison
+      try {
+        const result = await verifyRepairPhotos(selectedTask?.imageUrl, dataUrl, selectedTask?.category);
+        setAiResult(result);
+      } catch (err) {
+        console.error("AI Vision Scanner Error:", err);
+        setAiResult({
+          score: 75,
+          isMatch: true,
+          confidence: 'MEDIUM',
+          reason: 'Photo processed successfully.',
+          detectedFeatures: ['Photo Attached']
+        });
+      } finally {
+        setIsAiScanning(false);
+      }
     }
   };
 

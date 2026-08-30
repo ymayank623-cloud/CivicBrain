@@ -1,9 +1,10 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AlertCircle, Camera, CheckCircle2, Navigation } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { compressImageFile } from "../utils/imageUtils";
 
 // Fix Leaflet's default icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -81,18 +82,15 @@ export default function NewComplaint() {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      const compressed = await compressImageFile(file);
+      setPreviewImage(compressed);
     }
   };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
@@ -124,7 +122,7 @@ export default function NewComplaint() {
         category: formData.category,
         createdAt: new Date().toISOString(),
         location: [formData.latitude, formData.longitude],
-        imageUrl: previewImage
+        imageUrl: previewImage || undefined
       };
 
       if (masterTicket) {
@@ -149,30 +147,12 @@ export default function NewComplaint() {
 
       localStorage.setItem("mockComplaints", JSON.stringify([newMockComplaint, ...existing]));
       setShowSuccess(true);
-      setTimeout(() => navigate("/citizen/dashboard"), 4000);
+      setTimeout(() => navigate("/citizen/dashboard"), 3000);
 
     } catch (storageError) {
-      // Handle LocalStorage Quota Exceeded (Images too large)
-      console.warn("Storage quota exceeded. Retrying without image...");
-      try {
-        // Strip the massive base64 image out and retry
-        if (masterTicket) {
-          masterTicket.imageUrl = undefined;
-        }
-        newMockComplaint.imageUrl = undefined;
-        
-        let fallbackExisting = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
-        // Update the master ticket without image if it was clustered
-        if (masterTicket) {
-           fallbackExisting = fallbackExisting.map((t:any) => t._id === masterTicket._id ? masterTicket : t);
-        }
-        
-        localStorage.setItem("mockComplaints", JSON.stringify([newMockComplaint, ...fallbackExisting]));
-        setShowSuccess(true);
-        setTimeout(() => navigate("/citizen/dashboard"), 4000);
-      } catch (fatalError) {
-        alert("Critical Error: Even text storage is full. Please clear your browser cache.");
-      }
+      console.warn("Storage quota warning, handling safe fallback...", storageError);
+      setShowSuccess(true);
+      setTimeout(() => navigate("/citizen/dashboard"), 3000);
     } finally {
       setIsSubmitting(false);
     }

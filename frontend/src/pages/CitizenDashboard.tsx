@@ -5,41 +5,7 @@ import {
   CreditCard, Droplets, Baby, Briefcase, ChevronRight, Search, Phone, X,
   Camera
 } from "lucide-react";
-
-function compressImage(file: File, maxWidth = 800, quality = 0.7): Promise<string> {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        let width = img.width;
-        let height = img.height;
-
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          resolve(e.target?.result as string);
-          return;
-        }
-
-        ctx.drawImage(img, 0, 0, width, height);
-        const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
-        resolve(compressedDataUrl);
-      };
-      img.onerror = () => resolve(e.target?.result as string);
-      img.src = e.target?.result as string;
-    };
-    reader.onerror = () => resolve("");
-    reader.readAsDataURL(file);
-  });
-}
+import { compressImageFile } from "../utils/imageUtils";
 
 export default function CitizenDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -65,7 +31,7 @@ export default function CitizenDashboard() {
     setUser(parsed);
     setPincode(parsed.pincode || "");
 
-    // Fetch Complaints from localStorage
+    // Fetch and sanitize Complaints from localStorage
     setTimeout(() => {
       try {
         const storedComplaints = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
@@ -74,7 +40,7 @@ export default function CitizenDashboard() {
         setComplaints([]);
       }
       setLoading(false);
-    }, 800);
+    }, 400);
   }, [navigate]);
 
   const handleSearchOfficials = (e: React.FormEvent) => {
@@ -368,16 +334,8 @@ export default function CitizenDashboard() {
                         onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            try {
-                              const compressed = await compressImage(file);
-                              setEditForm(prev => ({ ...prev, imageUrl: compressed }));
-                            } catch (err) {
-                              const reader = new FileReader();
-                              reader.onloadend = () => {
-                                setEditForm(prev => ({ ...prev, imageUrl: reader.result as string }));
-                              };
-                              reader.readAsDataURL(file);
-                            }
+                            const compressed = await compressImageFile(file);
+                            setEditForm(prev => ({ ...prev, imageUrl: compressed }));
                           }
                         }}
                       />
