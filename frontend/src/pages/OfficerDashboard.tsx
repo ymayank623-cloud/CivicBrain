@@ -289,10 +289,17 @@ export default function OfficerDashboard() {
                   )}
 
                   {task.status !== 'WITHDRAWN' && (
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                      <div className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide">
-                        <Clock size={12} className="mr-1 text-red-500" /> Due: {new Date(task.slaDeadline).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    <div className="mt-4 pt-3 border-t border-gray-100">
+                      <div className="flex items-center justify-between text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2">
+                        <span className="flex items-center"><Clock size={12} className="mr-1 text-red-500" /> Due: {new Date(task.slaDeadline).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        <span className="text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">Click to Resolve</span>
                       </div>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
+                        className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-2.5 px-4 rounded text-xs uppercase tracking-wider flex items-center justify-center shadow transition-colors cursor-pointer"
+                      >
+                        <Camera size={14} className="mr-2 text-orange-400" /> Open &amp; Upload Resolution Proof
+                      </button>
                     </div>
                   )}
                 </div>
@@ -305,18 +312,22 @@ export default function OfficerDashboard() {
       {/* Task Action Modal */}
       {selectedTask && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded w-full max-w-lg overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200 border border-gray-300">
-            <button 
-              onClick={() => { setSelectedTask(null); setAfterImage(null); }}
-              className="absolute top-4 right-4 bg-gray-100 text-gray-500 hover:text-gray-900 p-2 rounded transition-colors z-10 border border-gray-200"
-            >
-              <X size={20} />
-            </button>
+          <div className="bg-white rounded-lg w-full max-w-xl max-h-[90vh] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200 border border-gray-300 flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 sticky top-0 z-20">
+              <div>
+                <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wide">Issue ID: {selectedTask._id}</span>
+                <h3 className="text-lg font-bold text-blue-900 leading-tight">{selectedTask.title}</h3>
+              </div>
+              <button 
+                onClick={() => { setSelectedTask(null); setAfterImage(null); }}
+                className="bg-white text-gray-500 hover:text-gray-900 p-2 rounded-md transition-colors border border-gray-200 shadow-sm"
+              >
+                <X size={18} />
+              </button>
+            </div>
             
-            <div className="p-6">
-              <div className="text-[10px] font-bold text-orange-600 uppercase tracking-wide mb-1">Issue ID: {selectedTask._id}</div>
-              <h3 className="text-2xl font-bold text-blue-900 leading-tight mb-2">{selectedTask.title}</h3>
-              <p className="text-gray-600 flex items-center mb-5 text-sm font-medium">
+            <div className="p-6 overflow-y-auto">
+              <p className="text-gray-600 flex items-center mb-4 text-sm font-medium">
                 <MapPin size={16} className="mr-2 text-blue-800" /> {selectedTask.address}
               </p>
 
