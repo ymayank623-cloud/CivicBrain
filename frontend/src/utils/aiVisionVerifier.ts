@@ -1,4 +1,4 @@
-﻿// AI Computer Vision Verification Engine for Civic Infrastructure Repair
+// AI Computer Vision Verification Engine for Civic Infrastructure Repair
 
 export interface AIVerificationResult {
   score: number; // 0 to 100
@@ -19,7 +19,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
       img.crossOrigin = 'Anonymous';
     }
     img.onload = () => resolve(img);
-    img.onerror = (e) => reject(new Error('Failed to load image for AI verification.'));
+    img.onerror = () => reject(new Error('Failed to load image for AI verification.'));
     img.src = src;
   });
 }
@@ -194,7 +194,6 @@ export async function verifyRepairPhotos(
     }
 
     // Standalone resolution image verification
-    const hash = computeDHash(afterImg);
     const color = computeColorVector(afterImg);
     if (color.variance < 15) {
       return {
