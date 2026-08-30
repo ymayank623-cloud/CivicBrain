@@ -694,22 +694,28 @@ export default function OfficerDashboard() {
                     {/* Action Button */}
                     <button 
                       onClick={() => handleResolveTask(selectedTask._id)}
-                      disabled={isAiScanning || (aiResult !== null && !aiResult.isMatch && !manualOverride)}
+                      disabled={!afterImage || isAiScanning || (!aiResult?.isMatch && !manualOverride)}
                       className={`w-full mt-3 font-bold py-3 rounded-lg flex items-center justify-center uppercase tracking-wide text-xs transition-all shadow-md ${
-                        isAiScanning 
-                          ? 'bg-gray-400 text-white cursor-not-allowed'
-                          : aiResult && !aiResult.isMatch && !manualOverride
-                          ? 'bg-red-600 hover:bg-red-700 text-white cursor-not-allowed opacity-90'
-                          : 'bg-green-600 hover:bg-green-700 text-white cursor-pointer'
+                        !afterImage
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : isAiScanning 
+                          ? 'bg-blue-700 text-white cursor-wait'
+                          : !aiResult?.isMatch && !manualOverride
+                          ? 'bg-red-600 text-white cursor-not-allowed shadow-red-200'
+                          : 'bg-green-600 hover:bg-green-700 text-white cursor-pointer shadow-green-200'
                       }`}
                     >
-                      {isAiScanning ? (
+                      {!afterImage ? (
                         <>
-                          <Loader2 size={16} className="animate-spin mr-2" /> AI Scanning Image...
+                          <Camera size={16} className="mr-2" /> Upload Photo Proof First
                         </>
-                      ) : aiResult && !aiResult.isMatch && !manualOverride ? (
+                      ) : isAiScanning ? (
                         <>
-                          <ShieldAlert size={16} className="mr-2" /> Photo Mismatch — Upload Real Site Photo
+                          <Loader2 size={16} className="animate-spin mr-2" /> AI Scanning &amp; Verifying Image...
+                        </>
+                      ) : !aiResult?.isMatch && !manualOverride ? (
+                        <>
+                          <ShieldAlert size={16} className="mr-2" /> ❌ Photo Mismatch — Upload Authentic Site Photo
                         </>
                       ) : (
                         <>
