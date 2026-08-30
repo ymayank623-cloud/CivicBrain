@@ -93,39 +93,7 @@ CivicBrain/
 
 ---
 
-## 💻 Installation & Local Setup
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/your-username/CivicBrain.git
-cd CivicBrain
-```
-
-### 2. Setup & Run Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
-*Frontend runs on `http://localhost:5173`*
-
-### 3. Setup & Run Backend
-```bash
-cd ../backend
-npm install
-npm run dev
-```
-*Backend runs on `http://localhost:5001`*
-
-### 4. Setup & Run AI Service (Optional)
-```bash
-cd ../ai-service
-pip install -r requirements.txt
-python app.py
-```
-*AI Service runs on `http://localhost:8000`*
-
----
 
 ## 🔒 Demo Credentials (For Evaluation)
 
