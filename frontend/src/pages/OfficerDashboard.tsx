@@ -861,7 +861,7 @@ export default function OfficerDashboard() {
                     </a>
                   </div>
                   <p className="text-[11px] text-slate-400">
-                    Enter your Gemini API key to run real multimodal vision verification comparing the citizen and officer photos with Gemini 2.5 Flash.
+                    Enter your Gemini API key to run multimodal reasoning with Gemini 2.5 Flash. If no key is provided, CivicBrain automatically uses on-device Edge Computer Vision.
                   </p>
                   <div className="flex gap-2">
                     <input
@@ -982,7 +982,7 @@ export default function OfficerDashboard() {
                           {aiResult.status === 'ACCEPTED' ? '✓ AI Verification Accepted' : '❌ AI Verification Rejected'}
                         </span>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-950 text-purple-300 border border-purple-500/30">
-                          ⚡ Google Gemini Vision
+                          {aiResult.engine === 'GEMINI' ? '⚡ Google Gemini Vision' : '⚡ Smart Edge Computer Vision'}
                         </span>
                       </div>
                       <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${
@@ -1014,7 +1014,9 @@ export default function OfficerDashboard() {
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-200 mt-1">
-                      <strong className="text-slate-400 block text-[10px] uppercase mb-0.5">Gemini Visual Audit Reason:</strong>
+                      <strong className="text-slate-400 block text-[10px] uppercase mb-0.5">
+                        {aiResult.engine === 'GEMINI' ? 'Gemini Visual Audit Reason' : 'AI Visual Audit Assessment'} ({aiResult.score}% Confidence):
+                      </strong>
                       {aiResult.reason}
                     </div>
 
