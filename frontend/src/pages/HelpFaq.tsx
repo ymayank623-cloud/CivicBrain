@@ -1,4 +1,4 @@
-﻿import { ChevronDown, ChevronUp, Phone, Mail } from "lucide-react";
+import { ChevronDown, ChevronUp, Phone, Mail } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -31,8 +31,8 @@ const faqs = [
   {
     category: "Technical Issues",
     items: [
-      { q: "Login nahi ho raha hai?", a: "Demo accounts use karein: citizen@email.com (Citizen), officer@demo.com (Field Officer), dept@demo.com (Dept Head), admin@demo.com (Commissioner). Koi bhi password chalega." },
-      { q: "Photo upload nahi ho rahi?", a: "Photo 5MB se kam honi chahiye. Badi photos automatically compress karke save hoti hain. Agar phir bhi issue ho toh complaint bina photo ke submit karein." },
+      { q: "Login nahi ho raha hai?", a: "Demo accounts use karein: citizen@email.com (Citizen) ya officer@demo.com (Field Officer). Koi bhi password chalega." },
+      { q: "Photo upload nahi ho rahi?", a: "Photo 10MB se kam honi chahiye. Badi photos automatically compress karke save hoti hain. Agar phir bhi issue ho toh complaint bina photo ke submit karein." },
       { q: "Portal slow lag raha hai?", a: "Browser cache clear karein (Ctrl+Shift+Del) aur page refresh karein. Chrome ya Firefox use karein best experience ke liye." },
     ]
   },

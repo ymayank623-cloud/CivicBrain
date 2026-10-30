@@ -1,24 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: var(--background);
   color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-/* SMART DARK MODE INVERT TRICK FOR HACKATHON */
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.glass-nav {
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Gradient accents */
+.civic-gradient-text {
+  background: linear-gradient(135deg, #1e293b 0%, #3b82f6 50%, #f97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.civic-gradient-bg {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #1e1b4b 100%);
+}
+
+/* SMART DARK MODE */
 html[data-theme="dark"] body {
-  background-color: #111;
+  background-color: #0b0f19;
   filter: invert(1) hue-rotate(180deg);
 }
 
-/* Double-invert images, maps, and specific colored elements to keep them normal */
 html[data-theme="dark"] img,
 html[data-theme="dark"] video,
 html[data-theme="dark"] .leaflet-container,
@@ -26,7 +71,6 @@ html[data-theme="dark"] [style*="background-image"] {
   filter: invert(1) hue-rotate(180deg);
 }
 
-/* Fix shadow issues caused by invert */
 html[data-theme="dark"] .shadow-sm,
 html[data-theme="dark"] .shadow-md,
 html[data-theme="dark"] .shadow-lg,

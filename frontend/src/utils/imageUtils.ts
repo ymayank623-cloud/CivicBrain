@@ -1,6 +1,6 @@
-﻿/**
+/**
  * Fast client-side Canvas Image Compression
- * Shrinks massive 5MB-10MB mobile/desktop photos down to ~30KB WebP/JPEG
+ * Shrinks massive 10MB mobile/desktop photos down to ~30KB WebP/JPEG
  * Prevents LocalStorage QuotaExceeded errors so images ALWAYS display and persist.
  */
 export function compressImageFile(file: File, maxDimension = 640, quality = 0.65): Promise<string> {

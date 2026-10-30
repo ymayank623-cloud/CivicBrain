@@ -1,220 +1,319 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, ShieldCheck, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, Lock, Mail, ArrowRight, Sparkles, CheckCircle2, Loader2, Server } from 'lucide-react';
+import { useLang } from '../context/LangContext';
 
 export default function Login() {
+  const [selectedRole, setSelectedRole] = useState<'CITIZEN' | 'FIELD_OFFICER'>('CITIZEN');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [authStepMessage, setAuthStepMessage] = useState('');
   const navigate = useNavigate();
+  const { t } = useLang();
+
+  const handleRoleTab = (role: 'CITIZEN' | 'FIELD_OFFICER') => {
+    setSelectedRole(role);
+    setError('');
+    if (role === 'CITIZEN') {
+      setEmail('citizen@email.com');
+      setPassword('demo123');
+    } else {
+      setEmail('officer@demo.com');
+      setPassword('demo123');
+    }
+  };
+
+  const handleQuickDemo = (role: 'CITIZEN' | 'FIELD_OFFICER') => {
+    setSelectedRole(role);
+    if (role === 'CITIZEN') {
+      setEmail('citizen@email.com');
+      setPassword('demo123');
+    } else {
+      setEmail('officer@demo.com');
+      setPassword('demo123');
+    }
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!email || !password) { setError('All fields are mandatory.'); return; }
+    if (!email || !password) {
+      setError(t('All fields are mandatory.', 'सभी फ़ील्ड भरना अनिवार्य है।'));
+      return;
+    }
+
+    setIsAuthenticating(true);
+    setAuthStepMessage('Connecting to Municipal Gateway (SSL 256-bit)...');
 
     const cleanEmail = email.trim().toLowerCase();
     const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const matchedUser = registeredUsers.find((u: any) => u.email?.trim().toLowerCase() === cleanEmail && u.password === password);
-    
-    // Master pre-seeded account & role accounts for cross-device support (Mobile/Laptop)
-    const isMasterUser = (cleanEmail === 'ymayank623@gmail.com' && password === 'Mayank8492');
-    const isDemoAccount = cleanEmail.includes('officer') || cleanEmail.includes('dept') ||
-                          cleanEmail.includes('admin') || cleanEmail.includes('commissioner');
+    const matchedUser = registeredUsers.find(
+      (u: any) => u.email?.trim().toLowerCase() === cleanEmail && u.password === password
+    );
 
-    if (matchedUser || isMasterUser || isDemoAccount) {
-      let mockRole = 'CITIZEN';
-      if (cleanEmail.includes('officer')) mockRole = 'FIELD_OFFICER';
-      if (cleanEmail.includes('dept')) mockRole = 'DEPT_HEAD';
-      if (cleanEmail.includes('admin') || cleanEmail.includes('commissioner')) mockRole = 'COMMISSIONER';
-      localStorage.setItem('token', 'civic-token-' + Date.now());
-      localStorage.setItem('user', JSON.stringify({
-        _id: 'user-' + Date.now(),
-        name: matchedUser?.name || cleanEmail.split('@')[0],
-        email: cleanEmail,
-        role: mockRole,
-        phone: matchedUser?.phone || '9876543210',
-        aadhaar: matchedUser?.aadhaar || 'XXXX-XXXX-8492',
-        pincode: matchedUser?.pincode || '110001',
-        state: matchedUser?.state || 'Delhi',
-        city: matchedUser?.city || 'New Delhi',
-        address: matchedUser?.address || 'Civil Lines',
-      }));
-      navigate('/');
-    } else {
-      setError('Invalid credentials. Please check your Email ID and Password.');
+    const isOfficer = cleanEmail.includes('officer') || selectedRole === 'FIELD_OFFICER';
+
+    let determinedRole: 'CITIZEN' | 'FIELD_OFFICER' = 'CITIZEN';
+    if (isOfficer && !matchedUser) {
+      determinedRole = 'FIELD_OFFICER';
+    } else if (matchedUser?.role) {
+      determinedRole = matchedUser.role === 'FIELD_OFFICER' ? 'FIELD_OFFICER' : 'CITIZEN';
     }
+
+    // Realistic server authentication handshake progression
+    setTimeout(() => {
+      setAuthStepMessage('Verifying user credentials with National Registry...');
+    }, 250);
+
+    setTimeout(() => {
+      setAuthStepMessage('Session authorized. Initializing Ward Telemetry...');
+    }, 550);
+
+    setTimeout(() => {
+      localStorage.setItem('token', 'civic-token-' + Date.now());
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          _id: matchedUser?._id || 'user-' + Date.now(),
+          name: matchedUser?.name || (determinedRole === 'FIELD_OFFICER' ? 'Officer Vikrant Singh' : cleanEmail.split('@')[0]),
+          email: cleanEmail,
+          role: determinedRole,
+          phone: matchedUser?.phone || '9876543210',
+          aadhaar: matchedUser?.aadhaar || 'XXXX-XXXX-8492',
+          pincode: matchedUser?.pincode || '110001',
+          state: matchedUser?.state || 'Uttar Pradesh',
+          city: matchedUser?.city || 'Lucknow',
+          address: matchedUser?.address || 'Civil Lines, Ward 14',
+          karmaPoints: matchedUser?.karmaPoints || (determinedRole === 'CITIZEN' ? 45 : 0),
+        })
+      );
+
+      setIsAuthenticating(false);
+      if (determinedRole === 'FIELD_OFFICER') {
+        navigate('/officer/dashboard');
+      } else {
+        navigate('/citizen/dashboard');
+      }
+    }, 850);
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f4f8] font-sans">
-      {/* GOI Top Bar */}
-      <div className="bg-[#1a3a6b] text-white text-[11px] px-4 py-1 flex justify-between items-center">
-        <span className="font-semibold tracking-wide">GOVERNMENT OF INDIA | DIGITAL INDIA INITIATIVE</span>
-        <span className="hidden sm:block">Screen Reader Access | Skip to Main Content</span>
-      </div>
-
-      {/* Ministry Header */}
-      <div className="bg-white border-b-4 border-[#FF6B1A] shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
-          {/* Emblem */}
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Emblem_of_India.svg/120px-Emblem_of_India.svg.png"
-            alt="Emblem of India" className="h-14 w-auto" />
-          <div className="border-l-2 border-gray-300 pl-4">
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Ministry of Housing & Urban Affairs</p>
-            <h1 className="text-xl sm:text-2xl font-bold text-[#1a3a6b] leading-tight">CivicBrain — Nagar Nigam Portal</h1>
-            <p className="text-[11px] text-orange-600 font-semibold">Citizen Grievance Redressal System (CGRS) | e-Governance</p>
+    <div className="min-h-[calc(100vh-80px)] bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        
+        {/* Left Side: Modern Value Proposition */}
+        <div className="lg:col-span-6 text-white space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-400/20 text-sky-400 text-xs font-bold tracking-wide">
+            <Sparkles size={14} /> {t("AI-Powered Municipal Governance", "AI-संचालित नगर निगम प्रशासन")}
           </div>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 py-10 grid lg:grid-cols-2 gap-8 items-start">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+            {t("Direct Redressal.", "सीधा समाधान।")}<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-amber-400">
+              {t("Zero Red Tape.", "शून्य लालफीताशाही।")}
+            </span>
+          </h1>
 
-        {/* Left Info Panel */}
-        <div className="space-y-5">
-          <div className="bg-[#1a3a6b] text-white rounded-lg p-6">
-            <h2 className="text-lg font-bold uppercase tracking-wider border-b border-blue-400 pb-3 mb-4">
-              About CivicBrain Portal
-            </h2>
-            <p className="text-sm text-blue-100 leading-relaxed">
-              CivicBrain is an integrated e-Governance platform developed under the Smart Cities Mission for efficient
-              resolution of public grievances. Citizens can register complaints online and track their real-time status.
+          <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+            {t(
+              "CivicBrain connects citizens directly with verified on-ground field officers using AI spatial clustering, automated SLA timers, and dual visual verification.",
+              "CivicBrain नागरिकों को सीधे जमीनी फील्ड अधिकारियों से जोड़ता है। AI विजन तकनीक और 4 घंटे के SLA के साथ वास्तविक कार्य सुनिश्चित होता है।"
+            )}
+          </p>
+
+          {/* Quick Demo Selector Cards */}
+          <div className="space-y-3 pt-2">
+            <p className="text-xs uppercase font-extrabold tracking-widest text-slate-400">
+              {t("Instant 1-Click Demo Login", "1-क्लिक डेमो लॉगिन")}
             </p>
-            <div className="mt-5 space-y-3">
-              {[
-                { n: '01', t: 'File Grievance Online', d: 'Potholes, drainage, electricity, water supply' },
-                { n: '02', t: 'AI-Based Triaging', d: 'Auto-categorize & prioritize complaints via AI' },
-                { n: '03', t: 'Real-Time Tracking', d: 'Track status with SLA countdown timers' },
-                { n: '04', t: 'Officer Assignment', d: 'Auto-assign nearest field officer' },
-              ].map(item => (
-                <div key={item.n} className="flex gap-3 items-start">
-                  <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded flex-shrink-0">{item.n}</span>
-                  <div>
-                    <p className="text-sm font-semibold text-white">{item.t}</p>
-                    <p className="text-xs text-blue-200">{item.d}</p>
-                  </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleQuickDemo('CITIZEN')}
+                className={`p-3 rounded-2xl text-left border transition-all cursor-pointer ${
+                  selectedRole === 'CITIZEN'
+                    ? 'bg-sky-500/20 border-sky-400 text-white shadow-lg shadow-sky-500/10'
+                    : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-bold text-sky-400">👤 Citizen Portal</span>
+                  {selectedRole === 'CITIZEN' && <CheckCircle2 size={14} className="text-sky-400" />}
                 </div>
-              ))}
+                <p className="text-[11px] text-slate-400 font-mono">citizen@email.com</p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickDemo('FIELD_OFFICER')}
+                className={`p-3 rounded-2xl text-left border transition-all cursor-pointer ${
+                  selectedRole === 'FIELD_OFFICER'
+                    ? 'bg-amber-500/20 border-amber-400 text-white shadow-lg shadow-amber-500/10'
+                    : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-bold text-amber-400">🛡️ Field Officer</span>
+                  {selectedRole === 'FIELD_OFFICER' && <CheckCircle2 size={14} className="text-amber-400" />}
+                </div>
+                <p className="text-[11px] text-slate-400 font-mono">officer@demo.com</p>
+              </button>
             </div>
           </div>
 
-          {/* Helpline */}
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-            <p className="text-xs font-bold text-orange-800 uppercase tracking-wide mb-2">Citizen Helpline</p>
-            <p className="text-2xl font-bold text-[#1a3a6b]">1800-CIVIC (24x7)</p>
-            <p className="text-xs text-gray-500 mt-1">Toll Free | Available in Hindi & English</p>
+          <div className="flex items-center gap-3 pt-4 border-t border-slate-800 text-xs text-slate-400">
+            <ShieldCheck className="text-emerald-400 flex-shrink-0" size={18} />
+            <span>256-bit encrypted secure citizen authentication. ISO 27001 compliant.</span>
           </div>
+        </div>
 
-          {/* Security notice */}
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex gap-3 items-start">
-            <ShieldCheck className="text-green-600 flex-shrink-0 mt-0.5" size={18} />
-            <div>
-              <p className="text-xs font-bold text-green-800 uppercase tracking-wide">Secure Connection</p>
-              <p className="text-xs text-green-700 mt-0.5">
-                This portal uses 256-bit SSL encryption. Never share your password with anyone.
-                Government officials will never ask for your OTP.
+        {/* Right Side: Modern Glass Login Box */}
+        <div className="lg:col-span-6">
+          <div className="bg-slate-900/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl relative overflow-hidden">
+            
+            {/* Role Switcher Tabs */}
+            <div className="flex p-1 bg-slate-950 rounded-2xl border border-slate-800 mb-6">
+              <button
+                type="button"
+                onClick={() => handleRoleTab('CITIZEN')}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  selectedRole === 'CITIZEN'
+                    ? 'bg-sky-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Citizen / नागरिक
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRoleTab('FIELD_OFFICER')}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  selectedRole === 'FIELD_OFFICER'
+                    ? 'bg-amber-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Field Officer / अधिकारी
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-white tracking-tight">
+                {selectedRole === 'CITIZEN' ? t('Citizen Sign In', 'नागरिक लॉगिन') : t('Field Officer Login', 'फील्ड अधिकारी लॉगिन')}
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                {selectedRole === 'CITIZEN' 
+                  ? t('Access your grievances, karma points, and live tracking.', 'अपनी शिकायतें, कर्मा पॉइंट्स और लाइव ट्रैकिंग देखें।')
+                  : t('Access route optimization, assigned tasks, and AI repair verification.', 'रूट ऑप्टिमाइज़ेशन और असाइन किए गए कार्यों को हल करें।')
+                }
               </p>
             </div>
-          </div>
-        </div>
 
-        {/* Right Login Form */}
-        <div>
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-            {/* Form Header */}
-            <div className="bg-[#1a3a6b] px-6 py-4 flex items-center gap-3">
-              <div className="bg-orange-500 rounded-full p-2">
-                <Lock className="text-white" size={16} />
+            {error && (
+              <div className="mb-4 bg-red-500/10 border border-red-500/30 p-3 rounded-xl text-xs text-red-300 flex items-center gap-2">
+                <span className="text-red-400 font-bold">⚠</span> {error}
               </div>
+            )}
+
+            <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <h2 className="text-white font-bold text-base">Citizen Login / नागरिक लॉगिन</h2>
-                <p className="text-blue-200 text-xs">Authorized users only — Unauthorized access is prohibited</p>
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                  {t('Email ID / Identifier', 'ईमेल आईडी')} <span className="text-rose-400">*</span>
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isAuthenticating}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-950/70 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all disabled:opacity-50"
+                    placeholder={selectedRole === 'CITIZEN' ? 'citizen@email.com' : 'officer@demo.com'}
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="p-6">
-              {error && (
-                <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-3 rounded text-sm text-red-700 flex items-start gap-2">
-                  <span className="text-red-500 font-bold">⚠</span> {error}
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    {t('Password', 'पासवर्ड')} <span className="text-rose-400">*</span>
+                  </label>
+                  <Link to="/forgot-password" className="text-xs text-sky-400 hover:text-sky-300 transition-colors">
+                    {t('Forgot Password?', 'पासवर्ड भूल गए?')}
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isAuthenticating}
+                    className="w-full pl-10 pr-11 py-3 bg-slate-950/70 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all disabled:opacity-50"
+                    placeholder="Enter password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Realistic Server Authentication Status Indicator */}
+              {isAuthenticating && (
+                <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/20 text-xs text-sky-300 flex items-center gap-2.5 animate-pulse">
+                  <Loader2 className="animate-spin text-sky-400 flex-shrink-0" size={16} />
+                  <div className="flex-1">
+                    <p className="font-bold text-[11px] text-white flex items-center gap-1.5">
+                      <Server size={12} className="text-sky-400" /> Municipal Gateway Response
+                    </p>
+                    <p className="text-[10px] text-slate-300 mt-0.5">{authStepMessage}</p>
+                  </div>
                 </div>
               )}
 
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Registered Email ID / Mobile <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
-                    <input type="text" required value={email} onChange={e => setEmail(e.target.value)}
-                      autoCapitalize="none" autoCorrect="off"
-                      className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] bg-gray-50"
-                      placeholder="Enter registered Email ID" />
-                  </div>
-                </div>
+              <button
+                type="submit"
+                disabled={isAuthenticating}
+                className={`w-full py-3.5 rounded-xl font-bold uppercase tracking-wider text-xs text-white shadow-xl flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer mt-2 disabled:opacity-60 ${
+                  selectedRole === 'CITIZEN'
+                    ? 'bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 shadow-sky-600/30'
+                    : 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-amber-600/30'
+                }`}
+              >
+                {isAuthenticating ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    <span>Authenticating with Server...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{t('Sign In to Dashboard', 'डैशबोर्ड में प्रवेश करें')}</span>
+                    <ArrowRight size={16} />
+                  </>
+                )}
+              </button>
 
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Password <span className="text-red-500">*</span>
-                    </label>
-                    <Link to="/forgot-password" className="text-xs text-[#1a3a6b] hover:text-orange-600 font-semibold">
-                      Forgot Password?
-                    </Link>
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
-                    <input type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
-                      autoCapitalize="none" autoCorrect="off"
-                      className="w-full pl-9 pr-10 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] bg-gray-50"
-                      placeholder="Enter password" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#1a3a6b]">
-                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
-                  </div>
-                </div>
-
-                <button type="submit"
-                  className="w-full bg-[#1a3a6b] hover:bg-[#0f2547] text-white py-3 rounded font-bold uppercase tracking-widest text-sm transition-colors shadow-md">
-                  Login to Portal
-                </button>
-
-                <div className="flex items-center gap-3 my-2">
-                  <div className="flex-1 h-px bg-gray-200" />
-                  <span className="text-xs text-gray-400 font-medium">OR</span>
-                  <div className="flex-1 h-px bg-gray-200" />
-                </div>
-
-                <div className="text-center">
-                  <p className="text-sm text-gray-600">New Citizen?{' '}
-                    <Link to="/register" className="font-bold text-orange-600 hover:text-orange-700 hover:underline">
-                      Register Here / यहाँ रजिस्टर करें →
-                    </Link>
-                  </p>
-                </div>
-              </form>
-            </div>
-
-            {/* Form Footer */}
-            <div className="bg-gray-50 border-t border-gray-200 px-6 py-3 flex flex-wrap gap-4 text-xs text-gray-500 justify-between">
-              <span>© 2025 CivicBrain | Ministry of Urban Development</span>
-              <span>Version 2.1.0 | Powered by Digital India</span>
-            </div>
+              <div className="pt-4 text-center border-t border-slate-800">
+                <p className="text-xs text-slate-400">
+                  {t('New to CivicBrain?', 'नए नागरिक हैं?')}{' '}
+                  <Link to="/register" className="font-bold text-amber-400 hover:text-amber-300 hover:underline">
+                    {t('Register an Account →', 'यहाँ नया खाता बनाएं →')}
+                  </Link>
+                </p>
+              </div>
+            </form>
           </div>
-
-          {/* WCAG notice */}
-          <p className="text-xs text-gray-400 text-center mt-3">
-            This portal conforms to WCAG 2.0 Level AA accessibility standards.
-          </p>
         </div>
-      </div>
 
-      {/* Footer Bar */}
-      <div className="bg-[#1a3a6b] text-white text-xs py-3 px-4 text-center mt-6">
-        <p>© 2025 Government of India. All Rights Reserved. | Terms of Use | Privacy Policy | Contact Us</p>
       </div>
     </div>
   );

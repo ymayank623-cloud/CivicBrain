@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CivicBrain - Complete Project and Evaluation Guide</title>
+<style>
+  @page {
+    size: A4;
+    margin: 12mm 14mm 12mm 14mm;
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 8pt;
+      font-family: Arial, sans-serif;
+      color: #64748b;
+    }
+    @bottom-left {
+      content: "CivicBrain | Project Evaluation and Architecture Guide";
+      font-size: 8pt;
+      font-family: Arial, sans-serif;
+      color: #64748b;
+    }
+  }
+
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9pt;
+    line-height: 1.4;
+    color: #1e293b;
+    margin: 0;
+    padding: 0;
+  }
+
+  .header-banner {
+    text-align: center;
+    border: 2px solid #1a3a6b;
+    padding: 12px 15px;
+    border-radius: 8px;
+    background: #f8fafc;
+    margin-bottom: 12px;
+  }
+
+  .badge-main {
+    background: #1a3a6b;
+    color: white;
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 12px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .title-main {
+    font-size: 18pt;
+    font-weight: 800;
+    color: #1a3a6b;
+    margin: 2px 0;
+    line-height: 1.15;
+  }
+
+  .subtitle-main {
+    font-size: 10.5pt;
+    color: #ea580c;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .author-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+    margin-top: 6px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+  }
+
+  .author-table td {
+    padding: 3px 8px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .author-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .chapter-heading {
+    font-size: 11pt;
+    font-weight: 800;
+    color: #1a3a6b;
+    border-bottom: 1.5px solid #1a3a6b;
+    padding-bottom: 2px;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .section-subheading {
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: #ea580c;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    border-left: 3px solid #ea580c;
+    padding-left: 6px;
+  }
+
+  p {
+    margin-top: 0;
+    margin-bottom: 6px;
+    text-align: justify;
+  }
+
+  ul, ol {
+    margin-top: 0;
+    margin-bottom: 6px;
+    padding-left: 18px;
+  }
+
+  li {
+    margin-bottom: 3px;
+  }
+
+  .info-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    break-inside: avoid;
+  }
+
+  .card-header {
+    font-weight: 700;
+    color: #1a3a6b;
+    font-size: 9pt;
+    margin-bottom: 3px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .status-pill {
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .pill-green { background: #dcfce7; color: #166534; }
+  .pill-orange { background: #ffedd5; color: #9a3412; }
+  .pill-blue { background: #dbeafe; color: #1e40af; }
+  .pill-red { background: #fee2e2; color: #991b1b; }
+
+  table.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+    margin: 6px 0 8px 0;
+    break-inside: avoid;
+  }
+
+  table.report-table th, table.report-table td {
+    border: 1px solid #cbd5e1;
+    padding: 4px 6px;
+    text-align: left;
+  }
+
+  table.report-table th {
+    background-color: #1a3a6b;
+    color: white;
+    font-weight: 700;
+    font-size: 8pt;
+  }
+
+  table.report-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+
+  .callout-box {
+    background: #f0fdf4;
+    border-left: 3px solid #16a34a;
+    padding: 6px 10px;
+    margin: 6px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 8.5pt;
+    break-inside: avoid;
+  }
+
+  .callout-orange {
+    background: #fff7ed;
+    border-left: 3px solid #ea580c;
+    padding: 6px 10px;
+    margin: 6px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 8.5pt;
+    break-inside: avoid;
+  }
+
+  .formula-box {
+    background: #f8fafc;
+    border: 1px dashed #64748b;
+    padding: 8px 12px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 8.5pt;
+    margin: 6px 0;
+    color: #0f172a;
+    line-height: 1.45;
+    break-inside: avoid;
+  }
+
+  .two-col-grid {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+    break-inside: avoid;
+  }
+
+  .two-col-grid .info-card {
+    flex: 1;
+    margin-bottom: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER BANNER -->
+<div class="header-banner">
+  <div class="badge-main">Project Evaluation &amp; Academic Documentation Guide</div>
+  <h1 class="title-main">CivicBrain</h1>
+  <div class="subtitle-main">AI-Powered Geospatial Clustering &amp; Municipal Grievance Redressal System</div>
+  
+  <table class="author-table">
+    <tr>
+      <td><b>Domain:</b> Full-Stack &amp; Applied AI e-Governance</td>
+      <td><b>Framework:</b> Digital India &amp; MoHUA Smart Cities Mission</td>
+    </tr>
+    <tr>
+      <td><b>Evaluation:</b> Lab Session &amp; Capstone Portfolio</td>
+      <td><b>Live URL:</b> <a href="https://civicbrain-nigam.vercel.app" style="color:#1a3a6b; font-weight:bold;">https://civicbrain-nigam.vercel.app</a></td>
+    </tr>
+  </table>
+</div>
+
+<!-- CHAPTER 1 -->
+<div class="chapter-heading">Chapter 1: Executive Summary &amp; Problem Statement</div>
+<div class="section-subheading">1.1 What is CivicBrain? (Conceptual Overview)</div>
+<p>
+  CivicBrain is an intelligent municipal e-Governance platform designed for city corporations and Nagar Nigams. It seamlessly connects citizens, field engineers, departmental supervisors, and municipal commissioners onto a single unified system.
+  Whenever a citizen observes an urban defect (such as an open pothole, damaged streetlight, broken water pipeline, or waste overflow), they can file a report with photographic evidence and geographic location. The platform uses spatial algorithms to group duplicate reports within a 50-meter radius, routes the task to the appropriate department, enforces strict resolution countdown timers, and mandates before-and-after photographic verification before any complaint can be marked as resolved.
+</p>
+
+<div class="section-subheading">1.2 Real-World Problems Solved</div>
+<ul>
+  <li><b>Duplicate Report Floods:</b> In standard portals, dozens of citizens reporting the same physical hazard create multiple separate work orders. CivicBrain merges these into one master ticket while dynamically raising its urgency.</li>
+  <li><b>Unverified Task Closures:</b> Standard systems allow officers to close tickets without proof. CivicBrain enforces mandatory photographic evidence before closure.</li>
+  <li><b>Administrative Delays:</b> CivicBrain implements live countdown resolution timers that automatically escalate unresolved issues to senior supervisors.</li>
+</ul>
+
+<!-- CHAPTER 2 -->
+<div class="chapter-heading">Chapter 2: Global Literature Review &amp; Comparative Analysis</div>
+<table class="report-table">
+  <thead>
+    <tr>
+      <th>System Name</th>
+      <th>Region / Framework</th>
+      <th>Working Methodology</th>
+      <th>Key Limitation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>NYC 311 / Boston 311</b></td>
+      <td>United States (Municipal)</td>
+      <td>Centralized citizen telephone and web ticketing.</td>
+      <td>No automated spatial deduplication; FIFO processing.</td>
+    </tr>
+    <tr>
+      <td><b>FixMyStreet</b></td>
+      <td>United Kingdom</td>
+      <td>Crowdsourced map reporting system.</td>
+      <td>Lacks photographic audit verification and dynamic penalty timers.</td>
+    </tr>
+    <tr>
+      <td><b>CPGRAMS &amp; Swachhata</b></td>
+      <td>India (National MoHUA)</td>
+      <td>Departmental complaint routing portal.</td>
+      <td>Manual triaging overhead and no spatial proximity grouping.</td>
+    </tr>
+    <tr>
+      <td><b>DBSCAN Spatial Research</b></td>
+      <td>Academic Literature</td>
+      <td>Density-based spatial clustering algorithms.</td>
+      <td>High computation overhead; treats geographic space as flat 2D plane.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- CHAPTER 3 -->
+<div class="chapter-heading">Chapter 3: The 4 Critical Research Gaps</div>
+
+<div class="two-col-grid">
+  <div class="info-card">
+    <div class="card-header">
+      <span>Gap 1: Absence of Geospatial Deduplication</span>
+      <span class="status-pill pill-red">Critical Gap</span>
+    </div>
+    <p><b>Issue:</b> 30 citizens reporting the same broken streetlight creates 30 separate tickets, wasting municipal labor.</p>
+    <p><b>CivicBrain Solution:</b> 50-meter spatial clustering algorithm that groups reports in the same category into one centralized Master Ticket.</p>
+  </div>
+  <div class="info-card">
+    <div class="card-header">
+      <span>Gap 2: Unverified Manual Closures</span>
+      <span class="status-pill pill-orange">Accountability</span>
+    </div>
+    <p><b>Issue:</b> Workers close complaints from a dropdown without verifying that work was physically completed.</p>
+    <p><b>CivicBrain Solution:</b> Dual-stage photographic audit requiring an After-Resolution photo before closure.</p>
+  </div>
+</div>
+
+<div class="two-col-grid">
+  <div class="info-card">
+    <div class="card-header">
+      <span>Gap 3: Static Priority Allocation</span>
+      <span class="status-pill pill-orange">Efficiency Gap</span>
+    </div>
+    <p><b>Issue:</b> High-density community hazards receive the same urgency as isolated minor defects.</p>
+    <p><b>CivicBrain Solution:</b> Dynamic priority escalation from Low to Medium, High, and Critical as more citizens report.</p>
+  </div>
+  <div class="info-card">
+    <div class="card-header">
+      <span>Gap 4: Network Fragility in Field</span>
+      <span class="status-pill pill-blue">Usability Gap</span>
+    </div>
+    <p><b>Issue:</b> Field workers operate in low-bandwidth zones where conventional web applications fail.</p>
+    <p><b>CivicBrain Solution:</b> Resilient client-side caching maintaining operational continuity during network disruptions.</p>
+  </div>
+</div>
+
+<!-- CHAPTER 4 -->
+<div class="chapter-heading">Chapter 4: Mathematical Modeling &amp; Algorithmic Logic</div>
+<div class="section-subheading">4.1 The Haversine Spatial Proximity Formulation</div>
+<p>
+  Because Earth is a curved sphere, standard flat-plane distance calculations produce significant metric distortion. CivicBrain applies the Spherical Haversine Equation:
+</p>
+<div class="formula-box">
+  <b>Step 1:</b> Difference in Latitude = Lat2 - Lat1 &emsp;|&emsp; Difference in Longitude = Lon2 - Lon1<br>
+  <b>Step 2:</b> a = sin^2(Diff_Lat / 2) + cos(Lat1) * cos(Lat2) * sin^2(Diff_Lon / 2)<br>
+  <b>Step 3:</b> Great-Circle Distance (d) = 2 * Earth_Radius * atan2(sqrt(a), sqrt(1 - a))<br>
+  <i>(Where Earth Radius R = 6,371 km, and d is calculated in physical kilometers)</i>
+</div>
+
+<div class="callout-orange">
+  <b>Clustering Rules (Within 50 Meters):</b><br>
+  &bull; If calculated distance d is less than or equal to 0.05 km (50 meters) and category matches: Link to Master Ticket.<br>
+  &bull; Master Ticket affected citizen count increases by one (+1).<br>
+  &bull; If affected count reaches 5 or more: Priority automatically escalates to <b>CRITICAL</b>.
+</div>
+
+<div class="section-subheading">4.2 Dynamic Service Level Agreement (SLA) Decay Model</div>
+<p>
+  Remaining Time = Permitted Duration - (Current Time - Submission Time). When remaining time drops to zero, the ticket status shifts to Breached, and escalation notifications are triggered up the municipal hierarchy.
+</p>
+
+<!-- CHAPTER 5 -->
+<div class="chapter-heading">Chapter 5: Full-Stack System Design &amp; Architecture</div>
+<table class="report-table">
+  <thead>
+    <tr>
+      <th>System Layer</th>
+      <th>Technologies Employed</th>
+      <th>Architectural Responsibility</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Presentation Layer</b></td>
+      <td>React, TypeScript, Vite, Tailwind CSS</td>
+      <td>Role-based dashboard rendering, responsive mobile layouts, and national e-Governance UI styling.</td>
+    </tr>
+    <tr>
+      <td><b>Mapping Layer</b></td>
+      <td>Leaflet GIS, OpenStreetMap</td>
+      <td>Interactive GPS pin dropping, field officer route visualization, and commissioner density heatmaps.</td>
+    </tr>
+    <tr>
+      <td><b>Application Layer</b></td>
+      <td>Node.js, Express, Socket Events</td>
+      <td>Haversine spatial clustering execution, SLA state timers, and dual-factor email OTP dispatch.</td>
+    </tr>
+    <tr>
+      <td><b>Persistence Layer</b></td>
+      <td>MongoDB &amp; Resilient Client Storage</td>
+      <td>Dual-tier data storage ensuring offline capability and zero data loss.</td>
+    </tr>
+    <tr>
+      <td><b>Hosting &amp; Delivery</b></td>
+      <td>Vercel Production Edge CDN</td>
+      <td>Global high-availability distribution with Single Page Application routing rules.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- CHAPTER 6 -->
+<div class="chapter-heading">Chapter 6: Stakeholder Portals &amp; User Journeys</div>
+
+<div class="two-col-grid">
+  <div class="info-card">
+    <div class="card-header">
+      <span>1. Citizen Portal</span>
+      <span class="status-pill pill-blue">Citizen</span>
+    </div>
+    <ul>
+      <li><b>Pincode Auto-Location:</b> 6-digit postal pincode automatically resolves State, District, and Nagar Nigam.</li>
+      <li><b>Dual-Factor Security:</b> Real 6-digit verification code delivered directly to Gmail inbox.</li>
+      <li><b>Live 5-Stage Tracking:</b> Submitted &rarr; Clustered &rarr; Assigned &rarr; In Progress &rarr; Resolved.</li>
+    </ul>
+  </div>
+
+  <div class="info-card">
+    <div class="card-header">
+      <span>2. Field Officer Dashboard</span>
+      <span class="status-pill pill-green">Officer</span>
+    </div>
+    <ul>
+      <li><b>Prioritized Queue:</b> Tasks sorted by affected citizen density and urgency.</li>
+      <li><b>GPS Navigation:</b> Shortest route visualization between repair locations.</li>
+      <li><b>Photographic Verification:</b> Mandatory upload of an After-Resolution photo.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="two-col-grid">
+  <div class="info-card">
+    <div class="card-header">
+      <span>3. Department Head Dashboard</span>
+      <span class="status-pill pill-orange">Supervisor</span>
+    </div>
+    <ul>
+      <li><b>Live Countdown Timers:</b> Color-coded visual indicators for pending and expiring SLAs.</li>
+      <li><b>Workload Balancing:</b> Reassigning delayed tasks among available field staff.</li>
+    </ul>
+  </div>
+
+  <div class="info-card">
+    <div class="card-header">
+      <span>4. Commissioner Dashboard</span>
+      <span class="status-pill pill-red">Executive</span>
+    </div>
+    <ul>
+      <li><b>City-Wide Density Heatmap:</b> Real-time visual representation across all city wards.</li>
+      <li><b>Municipal Health Index:</b> Overall metric based on on-time resolution rates.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- CHAPTER 7 -->
+<div class="chapter-heading">Chapter 7: Requirements &amp; Agile User Stories</div>
+<div class="section-subheading">7.1 Key Requirements Overview</div>
+<p>
+  <b>Functional:</b> Accepts geo-tagged complaints with photos; auto-resolves addresses from postal pincodes; verifies email via OTP; automatically clusters duplicate reports within 50m; requires resolution proof photos before closing tickets.<br>
+  <b>Non-Functional:</b> Spatial clustering calculation under 50 milliseconds; 99.9% uptime with offline resilience; 256-bit encryption; WCAG 2.0 AA accessibility compliance.
+</p>
+
+<div class="section-subheading">7.2 Agile User Stories with Story Points (SP)</div>
+<div class="info-card">
+  <div class="card-header">
+    <span>User Story 1: Citizen Spatial Grievance Filing (5 Story Points)</span>
+    <span class="status-pill pill-blue">High Priority</span>
+  </div>
+  <p><b>As a</b> Citizen, <b>I want to</b> submit a complaint with photo and GPS coordinates, <b>so that</b> the municipal corporation can fix the issue quickly. (<i>Acceptance Criteria:</i> Captures image and GPS; links nearby duplicates within 50m; issues tracking ID).</p>
+</div>
+
+<div class="info-card">
+  <div class="card-header">
+    <span>User Story 2: Field Officer Photo Verification (8 SP) &emsp;|&emsp; User Story 3: SLA Countdown (5 SP)</span>
+    <span class="status-pill pill-green">Core Workflow</span>
+  </div>
+  <p><b>Officer:</b> Uploads completion proof before closing ticket. <b>Head:</b> Views color-coded live timers (Green for normal, Yellow for warning, Red for breached).</p>
+</div>
+
+<!-- CHAPTER 8 -->
+<div class="chapter-heading">Chapter 8: JIRA Project Management &amp; Agile Schedule</div>
+<table class="report-table">
+  <thead>
+    <tr>
+      <th>Sprint Iteration</th>
+      <th>Duration</th>
+      <th>Core Milestone Deliverables</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Sprint 1</b></td>
+      <td>Weeks 1 to 2</td>
+      <td>Architecture design, Government UI theme, Pincode API, Email OTP flow.</td>
+      <td><span class="status-pill pill-green">100% Completed</span></td>
+    </tr>
+    <tr>
+      <td><b>Sprint 2</b></td>
+      <td>Weeks 3 to 4</td>
+      <td>Haversine spatial clustering engine, Master ticket linking, Citizen live tracker.</td>
+      <td><span class="status-pill pill-green">100% Completed</span></td>
+    </tr>
+    <tr>
+      <td><b>Sprint 3</b></td>
+      <td>Weeks 5 to 6</td>
+      <td>Field Officer portal, GPS routing map, Before/After image upload, Offline sync.</td>
+      <td><span class="status-pill pill-green">100% Completed</span></td>
+    </tr>
+    <tr>
+      <td><b>Sprint 4</b></td>
+      <td>Weeks 7 to 8</td>
+      <td>Commissioner heatmaps, SLA countdown engine, AI Chatbot, Vercel deployment.</td>
+      <td><span class="status-pill pill-green">100% Completed</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<table class="report-table">
+  <thead>
+    <tr>
+      <th>Project Role</th>
+      <th>Assigned Work Areas</th>
+      <th>JIRA Tracking Modules</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Full-Stack Lead</b></td>
+      <td>System architecture, Frontend frameworks, Express backend, Cloud deployment.</td>
+      <td>CIVIC-101, CIVIC-104, CIVIC-201</td>
+    </tr>
+    <tr>
+      <td><b>Algorithm Specialist</b></td>
+      <td>Haversine proximity logic, SLA countdown decay, Email OTP security.</td>
+      <td>CIVIC-108, CIVIC-205, CIVIC-302</td>
+    </tr>
+    <tr>
+      <td><b>Frontend &amp; GIS Engineer</b></td>
+      <td>Interactive GIS maps, Nagar Nigam theme, Mobile responsiveness, Chatbot.</td>
+      <td>CIVIC-112, CIVIC-308, CIVIC-401</td>
+    </tr>
+    <tr>
+      <td><b>QA &amp; Documentation Lead</b></td>
+      <td>Literature review, research gap analysis, user stories, evaluation documentation.</td>
+      <td>CIVIC-405, CIVIC-501</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- CHAPTER 9 -->
+<div class="chapter-heading">Chapter 9: Lab Evaluation &amp; Viva Voce Q&amp;A Guide</div>
+
+<div class="info-card">
+  <div class="card-header"><span>Q1: Why Haversine over Euclidean distance?</span></div>
+  <p><b>Ans:</b> Euclidean distance treats Earth as flat, distorting real-world metrics. Haversine calculates great-circle distance over Earth's spherical curvature (Radius = 6,371 km), providing exact physical meter precision.</p>
+</div>
+
+<div class="info-card">
+  <div class="card-header"><span>Q2: How to eliminate fake ticket closures?</span></div>
+  <p><b>Ans:</b> Mandatory dual-stage photographic verification. An officer cannot close a ticket without uploading a live photograph of the completed repair, permanently audited on the ticket.</p>
+</div>
+
+<div class="info-card">
+  <div class="card-header"><span>Q3: How is offline reliability maintained?</span></div>
+  <p><b>Ans:</b> Client-side state caching. During network interruptions, complaints and user states are preserved in local storage and synchronized once connectivity resumes.</p>
+</div>
+
+<div class="info-card">
+  <div class="card-header"><span>Q4: How does dynamic priority escalation work?</span></div>
+  <p><b>Ans:</b> Clustered complaints increment an affected citizen counter on the Master Ticket. When 5 or more citizens report the same issue, priority automatically elevates to Critical.</p>
+</div>
+
+<div class="callout-box">
+  <b>Evaluation Summary:</b> CivicBrain provides a robust, production-ready framework that fulfills all requirements across both research and full-stack development tracks, delivering measurable improvements in municipal efficiency and accountability.
+</div>
+
+</body>
+</html>
