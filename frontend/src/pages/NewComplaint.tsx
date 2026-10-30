@@ -9,6 +9,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { compressImageFile } from "../utils/imageUtils";
 import { useLang } from "../context/LangContext";
+import { getStoredComplaints, saveStoredComplaints } from "../utils/mockData";
 
 // Fix Leaflet's default icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -102,11 +103,11 @@ export default function NewComplaint() {
     setIsSubmitting(true);
     setSubmissionStep("1/3 Encrypting visual proof and generating EXIF metadata...");
 
-    const existing = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
+    const existing = getStoredComplaints();
 
-    // Check for 50m spatial cluster duplicate
+    // Check for 50m spatial cluster duplicate only if SAME category
     const duplicate = existing.find((c: any) => {
-      if (!c.location || c.status === 'RESOLVED') return false;
+      if (!c.location || c.status === 'RESOLVED' || c.category !== formData.category) return false;
       const dist = getDistanceInMeters(formData.latitude, formData.longitude, c.location[0], c.location[1]);
       return dist <= 50;
     });
@@ -130,7 +131,7 @@ export default function NewComplaint() {
       let updatedComplaints;
       if (duplicate) {
         updatedComplaints = existing.map((c: any) => {
-          if (c._id === duplicate._id) {
+          if (c._id === duplicate._id || c.id === duplicate.id) {
             return {
               ...c,
               impactedCount: (c.impactedCount || 1) + 1,
@@ -156,7 +157,7 @@ export default function NewComplaint() {
         updatedComplaints = [newComplaint, ...existing];
       }
 
-      localStorage.setItem("mockComplaints", JSON.stringify(updatedComplaints));
+      saveStoredComplaints(updatedComplaints);
       setIsSubmitting(false);
       setShowSuccess(true);
       setTimeout(() => {

@@ -200,6 +200,32 @@ export default function GovNavbar() {
                     Officer
                   </span>
                 )}
+                {/* 1-Click Role Switcher for Seamless Testing & Demos */}
+                <button
+                  onClick={() => {
+                    const newRole = user.role === "CITIZEN" ? "FIELD_OFFICER" : "CITIZEN";
+                    const updatedUser = {
+                      ...user,
+                      role: newRole,
+                      name: newRole === "FIELD_OFFICER" ? "Officer Vikrant Singh" : (user.name?.includes("Officer") ? "Aakash Verma" : user.name)
+                    };
+                    localStorage.setItem("user", JSON.stringify(updatedUser));
+                    setUser(updatedUser);
+                    if (newRole === "FIELD_OFFICER") {
+                      navigate("/officer/dashboard");
+                    } else {
+                      navigate("/citizen/dashboard");
+                    }
+                  }}
+                  className={`px-2.5 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 border cursor-pointer ${
+                    user.role === "CITIZEN"
+                      ? "bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border-indigo-500/30"
+                      : "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/30"
+                  }`}
+                  title={user.role === "CITIZEN" ? "Switch to Officer View" : "Switch to Citizen View"}
+                >
+                  {user.role === "CITIZEN" ? "👮 Switch to Officer" : "👤 Switch to Citizen"}
+                </button>
                 <Link
                   to="/profile"
                   className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition-colors"
@@ -337,15 +363,42 @@ export default function GovNavbar() {
               </Link>
             </div>
           ) : (
-            <button
-              onClick={() => {
-                handleLogout();
-                setMobileOpen(false);
-              }}
-              className="text-left text-sm font-bold text-red-400 py-2 flex items-center gap-2"
-            >
-              <LogOut size={16} /> {t("Logout", "लॉगआउट")}
-            </button>
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                onClick={() => {
+                  const newRole = user.role === "CITIZEN" ? "FIELD_OFFICER" : "CITIZEN";
+                  const updatedUser = {
+                    ...user,
+                    role: newRole,
+                    name: newRole === "FIELD_OFFICER" ? "Officer Vikrant Singh" : (user.name?.includes("Officer") ? "Aakash Verma" : user.name)
+                  };
+                  localStorage.setItem("user", JSON.stringify(updatedUser));
+                  setUser(updatedUser);
+                  setMobileOpen(false);
+                  if (newRole === "FIELD_OFFICER") {
+                    navigate("/officer/dashboard");
+                  } else {
+                    navigate("/citizen/dashboard");
+                  }
+                }}
+                className={`w-full text-center py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider border cursor-pointer ${
+                  user.role === "CITIZEN"
+                    ? "bg-indigo-600/20 text-indigo-300 border-indigo-500/30"
+                    : "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                }`}
+              >
+                {user.role === "CITIZEN" ? "👮 Switch to Officer View" : "👤 Switch to Citizen View"}
+              </button>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMobileOpen(false);
+                }}
+                className="text-left text-sm font-bold text-red-400 py-2 flex items-center gap-2"
+              >
+                <LogOut size={16} /> {t("Logout", "लॉगआउट")}
+              </button>
+            </div>
           )}
         </div>
       )}

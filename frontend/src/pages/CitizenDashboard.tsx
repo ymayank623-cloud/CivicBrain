@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useLang } from "../context/LangContext";
 import ImageComparisonSlider from "../components/ImageComparisonSlider";
+import { getStoredComplaints, saveStoredComplaints } from "../utils/mockData";
 
 export default function CitizenDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -31,7 +32,7 @@ export default function CitizenDashboard() {
     if (!isInitial) setIsRefreshing(true);
     setTimeout(() => {
       try {
-        const storedComplaints = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
+        const storedComplaints = getStoredComplaints();
         setComplaints(storedComplaints);
         setSyncStatus(`Updated just now (${Math.floor(18 + Math.random() * 10)}ms)`);
       } catch (err) {
@@ -39,7 +40,7 @@ export default function CitizenDashboard() {
       }
       setLoading(false);
       setIsRefreshing(false);
-    }, isInitial ? 550 : 450);
+    }, isInitial ? 400 : 200);
   };
 
   useEffect(() => {
@@ -52,8 +53,23 @@ export default function CitizenDashboard() {
     setUser(parsed);
     setPincode(parsed.pincode || "110001");
 
-    // Fetch with realistic server handshake delay
     fetchComplaintsFromServer(true);
+
+    const handleSync = () => {
+      fetchComplaintsFromServer(false);
+    };
+
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('civicbrain_complaints_updated', handleSync);
+    document.addEventListener('visibilitychange', handleSync);
+
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('civicbrain_complaints_updated', handleSync);
+      document.removeEventListener('visibilitychange', handleSync);
+    };
   }, [navigate]);
 
   const handleSearchOfficials = (e: React.FormEvent) => {
@@ -471,14 +487,14 @@ export default function CitizenDashboard() {
                   <button
                     onClick={async () => {
                       setIsSaving(true);
-                      const all = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
+                      const all = getStoredComplaints();
                       const targetId = selectedTicket._id || selectedTicket.id;
                       const updated = all.map((t: any) => 
                         (t._id === targetId || t.id === targetId)
                           ? { ...t, title: editForm.title, description: editForm.description }
                           : t
                       );
-                      localStorage.setItem("mockComplaints", JSON.stringify(updated));
+                      saveStoredComplaints(updated);
                       setComplaints(updated);
                       setSelectedTicket({ ...selectedTicket, title: editForm.title, description: editForm.description });
                       setIsSaving(false);
@@ -571,10 +587,10 @@ export default function CitizenDashboard() {
                   <button
                     onClick={() => {
                       if (window.confirm("Are you sure you want to permanently delete this grievance?")) {
-                        const all = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
+                        const all = getStoredComplaints();
                         const targetId = selectedTicket._id || selectedTicket.id;
                         const updated = all.filter((t: any) => t._id !== targetId && t.id !== targetId);
-                        localStorage.setItem("mockComplaints", JSON.stringify(updated));
+                        saveStoredComplaints(updated);
                         setComplaints(updated);
                         setSelectedTicket(null);
                         setIsEditingTicket(false);

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Search, MapPin, Clock, Truck, CheckCircle2, Star, Image as ImageIcon, Bot, Sparkles, ShieldCheck, Loader2, Database, Wifi } from 'lucide-react';
 import { useLang } from '../context/LangContext';
 import ImageComparisonSlider from '../components/ImageComparisonSlider';
+import { getStoredComplaints } from '../utils/mockData';
 
 export default function Track() {
   const [ticketId, setTicketId] = useState("");
@@ -35,7 +36,7 @@ export default function Track() {
     }, 550);
 
     setTimeout(() => {
-      const all = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
+      const all = getStoredComplaints();
       const found = all.find((t: any) => 
         (t._id && t._id.toLowerCase() === idToSearch.toLowerCase()) || 
         (t.id && t.id.toLowerCase() === idToSearch.toLowerCase()) ||

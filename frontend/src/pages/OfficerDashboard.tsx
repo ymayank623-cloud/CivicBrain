@@ -12,6 +12,7 @@ import { verifyRepairPhotos } from '../utils/aiVisionVerifier';
 import type { AIVerificationResult } from '../utils/aiVisionVerifier';
 import { compressImageFile } from '../utils/imageUtils';
 import ImageComparisonSlider from '../components/ImageComparisonSlider';
+import { getStoredComplaints, saveStoredComplaints } from '../utils/mockData';
 
 // Fix Leaflet Default Icon issue in React/Vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -137,54 +138,37 @@ export default function OfficerDashboard() {
   };
 
   const clearAllComplaints = () => {
-    localStorage.removeItem("mockComplaints");
-    setTasks([]);
-    setTargetRoute(null);
-    setIsRoutingStarted(false);
-    setRouteInfoText("✓ All fake / demo complaints successfully cleared. Only real complaints will be displayed.");
+    if (window.confirm("Do you want to clear demo tasks? Any citizen-submitted grievances will be preserved.")) {
+      const stored = getStoredComplaints();
+      const userComplaintsOnly = stored.filter((c: any) => !c.isDemo && !c._id?.startsWith("DEMO-"));
+      saveStoredComplaints(userComplaintsOnly);
+      loadTasks();
+      setTargetRoute(null);
+      setIsRoutingStarted(false);
+      setRouteInfoText("✓ Demo complaints cleared. Citizen-submitted grievances preserved.");
+    }
   };
 
   const loadTasks = (isInitial = false) => {
     if (isInitial) setLoading(true);
     setTimeout(() => {
-      const storedComplaints = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
-      
-      // Auto-filter: remove all fake demo complaints from Lucknow and auto-generated seeds
-      const realComplaints = storedComplaints.filter((c: any) => {
-        const desc = (c.description || '').toLowerCase();
-        const title = (c.title || '').toLowerCase();
-        
-        // Remove auto-generated seed complaints
-        if (desc.includes('auto-generated') || desc.includes('demo purposes') || desc.includes('demo complaint')) return false;
-        if (title.startsWith('issue with ')) return false;
-        
-        // Remove fake complaints located in Lucknow demo zone
-        if (c.location && Math.abs(c.location[0] - 26.8467) < 0.25 && Math.abs(c.location[1] - 80.9462) < 0.25) {
-          // Keep only if user manually lodged it with a custom title not matching generic seeds
-          if (title.includes('issue with') || desc.includes('auto-generated')) return false;
-          // Purge Lucknow demo seed complaints
-          return false;
-        }
-        return true;
-      });
+      const storedComplaints = getStoredComplaints();
 
-      if (realComplaints.length !== storedComplaints.length) {
-        localStorage.setItem("mockComplaints", JSON.stringify(realComplaints));
-      }
-
-      const mappedTasks = realComplaints.map((c: any) => ({
-        _id: c._id || c.id,
-        title: c.title,
-        category: c.category,
+      // Map every complaint (both citizen-lodged and default tasks) into field tasks
+      const mappedTasks = storedComplaints.map((c: any) => ({
+        _id: c._id || c.id || `CB-${Math.floor(1000 + Math.random() * 9000)}`,
+        title: c.title || c.description?.slice(0, 50) || c.category || "Reported Civic Grievance",
+        description: c.description || "",
+        category: c.category || "Sanitation & Garbage",
         status: c.status || 'ASSIGNED',
-        priority: c.priority || (c.category === 'Open Manhole' ? 'CRITICAL' : c.category === 'Water Leak' ? 'HIGH' : 'MEDIUM'),
-        location: c.location || [26.8467, 80.9462],
-        address: c.location ? `Ward Sector • Lat: ${c.location[0].toFixed(3)}, Lng: ${c.location[1].toFixed(3)}` : "Ward Municipal Area",
-        imageUrl: c.imageUrl,
-        afterImageUrl: c.afterImageUrl,
+        priority: c.priority || (c.category?.includes('Manhole') ? 'CRITICAL' : c.category?.includes('Water') ? 'HIGH' : 'MEDIUM'),
+        location: Array.isArray(c.location) && c.location.length === 2 ? c.location : [26.8467, 80.9462],
+        address: c.address || (c.location ? `Ward Sector • Lat: ${Number(c.location[0]).toFixed(3)}, Lng: ${Number(c.location[1]).toFixed(3)}` : "Ward Municipal Area"),
+        imageUrl: c.imageUrl || null,
+        afterImageUrl: c.afterImageUrl || null,
         aiScore: c.aiScore || (c.status === 'RESOLVED' ? 88 : null),
         aiReason: c.aiReason || null,
-        remarks: c.remarks,
+        remarks: c.remarks || "",
         impactedCount: c.impactedCount || 1,
         createdAt: c.createdAt || new Date().toISOString(),
         slaDeadline: new Date(new Date(c.createdAt || Date.now()).getTime() + 12 * 60 * 60 * 1000).toISOString()
@@ -192,13 +176,13 @@ export default function OfficerDashboard() {
       
       setTasks(mappedTasks);
       
-      const activeTasks = mappedTasks.filter((t: any) => t.status !== 'RESOLVED');
+      const activeTasks = mappedTasks.filter((t: any) => t.status !== 'RESOLVED' && t.status !== 'WITHDRAWN');
       const savedGps = localStorage.getItem("officer_live_gps");
       if (!savedGps && activeTasks.length > 0 && activeTasks[0].location) {
         setOfficerLocation([activeTasks[0].location[0] - 0.004, activeTasks[0].location[1] - 0.004]);
       }
       setLoading(false);
-    }, isInitial ? 500 : 0);
+    }, isInitial ? 350 : 0);
   };
 
   useEffect(() => {
@@ -222,13 +206,27 @@ export default function OfficerDashboard() {
       );
     }
 
+    // Real-time synchronization handlers
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'mockComplaints') {
         loadTasks();
       }
     };
+    const handleSync = () => {
+      loadTasks();
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('civicbrain_complaints_updated', handleSync);
+    document.addEventListener('visibilitychange', handleSync);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('civicbrain_complaints_updated', handleSync);
+      document.removeEventListener('visibilitychange', handleSync);
+    };
   }, []);
 
   const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -271,9 +269,9 @@ export default function OfficerDashboard() {
     setTasks(tasks.map(t => t._id === taskId ? { ...t, remarks: newRemarks } : t));
     setSelectedTask({ ...selectedTask, remarks: newRemarks });
     
-    const demoComplaints = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
+    const demoComplaints = getStoredComplaints();
     const updated = demoComplaints.map((c: any) => (c._id === taskId || c.id === taskId) ? { ...c, remarks: newRemarks } : c);
-    localStorage.setItem("mockComplaints", JSON.stringify(updated));
+    saveStoredComplaints(updated);
     alert("Progress remarks saved.");
   };
 
@@ -303,7 +301,7 @@ export default function OfficerDashboard() {
     setAfterImage(null);
     setAiResult(null);
     
-    const demoComplaints = JSON.parse(localStorage.getItem("mockComplaints") || "[]");
+    const demoComplaints = getStoredComplaints();
     const updated = demoComplaints.map((c: any) => (c._id === taskId || c.id === taskId) ? { 
       ...c, 
       status: 'RESOLVED', 
@@ -311,7 +309,7 @@ export default function OfficerDashboard() {
       aiScore: finalScore,
       aiReason: finalReason
     } : c);
-    localStorage.setItem("mockComplaints", JSON.stringify(updated));
+    saveStoredComplaints(updated);
     
     alert(`✅ Task Verified by AI Vision (${finalScore}% Confidence) and marked as RESOLVED! Permanently recorded in Ticket History.`);
   };
